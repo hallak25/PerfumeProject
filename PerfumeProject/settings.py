@@ -26,7 +26,6 @@ SECRET_KEY = 'django-insecure-%drtbsbt_85t8cu#!owe=2!+=8@25n_*y4ptvud)mbue8-k&0f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -75,7 +74,7 @@ WSGI_APPLICATION = 'PerfumeProject.wsgi.application'
 
 
 
-DATABASES_ = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'perfumedb',
@@ -85,7 +84,7 @@ DATABASES_ = {
         'PORT': '5432'
     }
 }
-DATABASES = {
+DATABASES_OLD = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
