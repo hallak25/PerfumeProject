@@ -1,0 +1,16 @@
+{% extends "master.html" %}
+
+{% block title %}
+  List of all perfumes
+{% endblock %}
+
+
+{% block content %}
+  <h1>Perfumes</h1>
+  
+ <ul>
+  {% for x in perfumes %}
+    <li>{{ x.perfumer }} {{ x.fragrance }} {{ x.package }} {{ x.bottle }} {{ x.origin }} {{ x.price }}</li>
+  {% endfor %}
+ </ul>
+{% endblock %}

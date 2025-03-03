@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Perfume Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .filters {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .summary {
+            background-color: #e9ecef;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .table-container {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-4">
+        <h1 class="mb-4">Perfume Inventory</h1>
+
+        <div class="filters">
+            <div class="row">
+                <div class="col-md-4">
+                    <select id="perfumerFilter" class="form-select">
+                        <option value="">Select Perfumer</option>
+                        {% for perfumer in perfumers %}
+                            <option value="{{ perfumer }}">{{ perfumer }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="fragranceFilter" class="form-select">
+                        <option value="">Select Fragrance</option>
+                        {% for fragrance in fragrance_names %}
+                            <option value="{{ fragrance }}">{{ fragrance }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="locationFilter" class="form-select">
+                        <option value="">Select Location</option>
+                        {% for location in locations %}
+                            <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Perfumer</th>
+                        <th>Fragrance</th>
+                        <th>Purchase Date</th>
+                        <th>Purchase Price</th>
+                        <th>Currency</th>
+                        <th>VAT Back</th>
+                        <th>Purchase Price (EUR)</th>
+                        <th>Origin</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fragranceTable">
+                    {% for item in transactions %}
+                    <tr data-perfumer="{{ item.perfumer }}" data-fragrance="{{ item.fragrance }}" data-location="{{ item.location }}" data-purchase_price_euro="{{ item.purchase_price_euro }}">
+                        <td>{{ item.perfumer }}</td>
+                        <td>{{ item.fragrance }}</td>
+                        <td>{{ item.purchase_date }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.purchase_currency }}</td>
+                        <td>{{ item.vat_back }}</td>
+                        <td>{{ item.purchase_price_euro|floatformat:2  }}</td>
+                        <td>{{ item.origin }}</td>
+                        <td>{{ item.location }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="openSellDialog({{ item.id }})">Sell</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Total Items: <span id="totalItems">0</span></h4>
+                </div>
+                <div class="col-md-6">
+                    <h4>Total Cost: <span id="totalCost">0.00</span> Euros</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="modal fade" id="sellModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sell Perfume</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sale Date</label>
+                        <input type="date" class="form-control" id="saleDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sale Price</label>
+                        <input type="number" class="form-control" id="salePrice" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Currency</label>
+                        <select class="form-select" id="saleCurrency">
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="AED">AED</option>
+                            <option value="RUB">RUB</option>
+                        </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitSale()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentFragranceId = null;
+        const sellModal = new bootstrap.Modal(document.getElementById('sellModal'));
+
+        function formatNumber(number) {
+            return number.toLocaleString('en-US', {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2
+            });
+        }
+
+        function filterTable() {
+            const perfumer = document.getElementById('perfumerFilter').value;
+            const fragrance = document.getElementById('fragranceFilter').value;
+            const location = document.getElementById('locationFilter').value;
+
+            const rows = document.querySelectorAll('#fragranceTable tr');
+            let visibleCount = 0;
+            let totalCostCount = 0.;
+
+            rows.forEach(row => {
+                const matchPerfumer = !perfumer || row.dataset.perfumer === perfumer;
+                const matchFragrance = !fragrance || row.dataset.fragrance === fragrance;
+                const matchLocation = !location || row.dataset.location === location;
+
+                if (matchPerfumer && matchFragrance && matchLocation) {
+                    row.style.display = '';
+                    visibleCount++;
+                    totalCostCount += parseFloat(row.dataset.purchase_price_euro);
+                    //totalCostCount += row.dataset.purchase_price_euro;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            document.getElementById('totalItems').textContent = visibleCount;
+            document.getElementById('totalCost').textContent = formatNumber(totalCostCount);
+        }
+
+        function openSellDialog(id) {
+            currentFragranceId = id;
+            document.getElementById('saleDate').value = new Date().toISOString().split('T')[0];
+            document.getElementById('salePrice').value = '10000';
+            document.getElementById('saleCurrency').value = 'RUB';
+            sellModal.show();
+        }
+
+        function submitSale() {
+            const saleData = {
+            sale_date: document.getElementById('saleDate').value,
+            sale_price: document.getElementById('salePrice').value,
+            sale_currency: document.getElementById('saleCurrency').value
+            };
+
+             // Get CSRF token from cookie
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+
+            fetch(`/sell/${currentFragranceId}/`, {
+                method: 'POST',
+                body: JSON.stringify(saleData),
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response =>  {
+                console.log('Response status:', response.status);
+                return response.text().then(text => {
+                    console.log('Raw response:', text);
+                    return JSON.parse(text);
+                });
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                alert('Error: ' + error);
+            });
+        }
+        function updateDropdownOptions() {
+            const perfumerFilter = document.getElementById('perfumerFilter');
+            const fragranceFilter = document.getElementById('fragranceFilter');
+            const locationFilter = document.getElementById('locationFilter');
+
+            const rows = document.querySelectorAll('#fragranceTable tr');
+
+            // Get selected values
+            const selectedPerfumer = perfumerFilter.value;
+            const selectedFragrance = fragranceFilter.value;
+            const selectedLocation = locationFilter.value;
+
+            // Create sets for unique values
+            let availablePerfumers = new Set();
+            let availableFragrances = new Set();
+            let availableLocations = new Set();
+
+            rows.forEach(row => {
+                const rowPerfumer = row.dataset.perfumer;
+                const rowFragrance = row.dataset.fragrance;
+                const rowLocation = row.dataset.location;
+
+                // Check if row matches current filters
+                const matchPerfumer = !selectedPerfumer || rowPerfumer === selectedPerfumer;
+                const matchFragrance = !selectedFragrance || rowFragrance === selectedFragrance;
+                const matchLocation = !selectedLocation || rowLocation === selectedLocation;
+
+                if ((!selectedFragrance && !selectedLocation) || (matchFragrance && matchLocation)) {
+                    availablePerfumers.add(rowPerfumer);
+                }
+                if ((!selectedPerfumer && !selectedLocation) || (matchPerfumer && matchLocation)) {
+                    availableFragrances.add(rowFragrance);
+                }
+                if ((!selectedPerfumer && !selectedFragrance) || (matchPerfumer && matchFragrance)) {
+                    availableLocations.add(rowLocation);
+                }
+            });
+
+            // Update dropdown options
+    function updateOptions(select, availableValues, currentValue) {
+        // Keep the first 'Select' option
+        const defaultOption = select.options[0];
+        select.innerHTML = '';
+        select.appendChild(defaultOption);
+
+        // Add only the available options
+        Array.from(availableValues)
+            .sort()
+            .forEach(value => {
+                const option = new Option(value, value);
+                select.appendChild(option);
+            });
+
+        // Restore selection if still valid
+        if (currentValue && availableValues.has(currentValue)) {
+            select.value = currentValue;
+        }
+    }
+            updateOptions(perfumerFilter, availablePerfumers, selectedPerfumer);
+            updateOptions(fragranceFilter, availableFragrances, selectedFragrance);
+            updateOptions(locationFilter, availableLocations, selectedLocation);
+        }
+
+        // Update event listeners
+        document.getElementById('perfumerFilter').addEventListener('change', () => {
+            updateDropdownOptions();
+            filterTable();
+        });
+        document.getElementById('fragranceFilter').addEventListener('change', () => {
+            updateDropdownOptions();
+            filterTable();
+        });
+        document.getElementById('locationFilter').addEventListener('change', () => {
+            updateDropdownOptions();
+            filterTable();
+        });
+
+
+        // Initial count
+        updateDropdownOptions();
+        filterTable();
+    </script>
+
+</body>
+</html>

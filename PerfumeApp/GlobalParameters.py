@@ -1,0 +1,10 @@
+EXCHANGE_RATES = {'EUR':1.0, 'GBP':0.83, 'AED':4.09, 'RUB':91.}
+
+PARIS = 'Paris'
+LONDON = 'London'
+MOSCOW = 'Moscow'
+NOVOSIBIRSK = 'Novosibirsk'
+DUBAI = 'Dubai'
+WORLD_WIDE = 'World'
+
+ALL_LOCATIONS = [PARIS, LONDON, MOSCOW, NOVOSIBIRSK, DUBAI]
