@@ -65,6 +65,7 @@ function updatePerfumeList(perfumes) {
         card.className = 'bg-white rounded-lg shadow p-4';
         card.innerHTML = `
             <h3 class="text-xl font-bold mb-2">${perfume.perfumer}</h3>
+            <p class="text-font-bold-700"> ${perfume.fragrance}</p>
             <p class="text-gray-600">
                 Location: <span onclick="makeFieldEditable(this, ${perfume.id}, 'location')">${perfume.location}</span>
             </p>
