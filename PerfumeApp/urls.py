@@ -1,11 +1,14 @@
 from django.urls import path,include
 from . import views
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.contrib.auth.views import LogoutView
 
 
 urlpatterns = [
     path('index/', views.index, name='index'),
     path('main/', views.main, name='main'),
+    path('', views.catalog_view, name='catalog'),
+    path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('PerfumeAppView/', views.PerfumeAppView, name='PerfumeAppView'),
     path('StockViewParis/', views.StockViewParis, name='StockViewParis'),
     path('StockViewLondon/', views.StockViewLondon, name='StockViewLondon'),
