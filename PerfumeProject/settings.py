@@ -26,8 +26,6 @@ SECRET_KEY = 'django-insecure-%drtbsbt_85t8cu#!owe=2!+=8@25n_*y4ptvud)mbue8-k&0f
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
 
 # Application definition
 
@@ -118,7 +116,7 @@ LOGIN_REDIRECT_URL = 'catalog'
 LOGOUT_REDIRECT_URL = 'login'
 
 SOCIAL_AUTH_JSONFIELD_ENABLED = False
-ALLOWED_HOSTS = ['192.168.1.137','192.168.0.104', 'localhost', '127.0.0.1',18.206.55.38]
+ALLOWED_HOSTS = ['192.168.1.137','192.168.0.104', 'localhost', '127.0.0.1','18.206.55.38']
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
