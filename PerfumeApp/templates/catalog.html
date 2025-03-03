@@ -25,7 +25,10 @@
             <div class="flex items-center space-x-4">
                 <span class="text-gray-600">Welcome, {{ user.username }}</span>
                 <a href="{% url 'password_change' %}" class="text-purple-600 hover:text-purple-800">Change Password</a>
-                <a href="{% url 'logout' %}" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</a>
+                <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Logout</button>
+
             </div>
         </div>
     </nav>
