@@ -1,3 +1,7 @@
+window.addEventListener('unhandledrejection', event => {
+    console.log('Promise rejection:', event.reason);
+});
+
 document.addEventListener('DOMContentLoaded', function() {
     const perfumerSelect = document.getElementById('perfumerSelect');
     const fragranceSelect = document.getElementById('fragranceSelect');
@@ -8,6 +12,43 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function updateFilters() {
+        if (!isStaff) {
+            locationSelect.value = userLocation;
+            locationSelect.disabled = true;
+        }
+
+        const selectedPerfumer = perfumerSelect.value;
+        const selectedFragrance = fragranceSelect.value;
+        const selectedLocation = locationSelect.value;
+
+        // Filter perfumes using client-side data
+        let filteredPerfumes = allPerfumes;
+
+        if (selectedPerfumer) {
+            filteredPerfumes = filteredPerfumes.filter(p => p.perfumer === selectedPerfumer);
+        }
+        if (selectedFragrance) {
+            filteredPerfumes = filteredPerfumes.filter(p => p.fragrance === selectedFragrance);
+        }
+        if (selectedLocation) {
+            filteredPerfumes = filteredPerfumes.filter(p => p.location === selectedLocation);
+        }
+
+        // Get unique values for dropdowns
+        const perfumers = [...new Set(filteredPerfumes.map(p => p.perfumer))].sort();
+        const fragrances = [...new Set(filteredPerfumes.map(p => p.fragrance))].sort();
+        const locations = [...new Set(filteredPerfumes.map(p => p.location))];
+
+        // Update dropdowns and perfume list
+        console.time('intitialupdates');
+        updateSelect(perfumerSelect, perfumers, selectedPerfumer);
+        updateSelect(fragranceSelect, fragrances, selectedFragrance);
+        updateSelect(locationSelect, locations, selectedLocation);
+        updatePerfumeList(filteredPerfumes);
+        console.timeEnd('intitialupdates');
+    }
+
+    function updateFilters_old() {
 
         if (!isStaff) {
 
@@ -33,13 +74,16 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+
+
     function updateSelect(select, options, selectedValue) {
         const currentValue = selectedValue || select.value;
         select.innerHTML = '<option value="">Select ' + select.id.replace('Select', '') + '</option>';
+
         options.forEach(option => {
             const optionElement = document.createElement('option');
-            optionElement.value = option;
-            optionElement.textContent = option;
+            optionElement.value = decodeURIComponent(option.replace(/&#x27;/g, "'"));
+            optionElement.textContent = decodeURIComponent(option.replace(/&#x27;/g, "'"));
             if (option === currentValue) {
                 optionElement.selected = true;
             }
@@ -54,37 +98,81 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial load
     updateFilters();
 });
-
-
 function updatePerfumeList(perfumes) {
     const perfumeList = document.getElementById('perfumeList');
+    perfumeList.className = 'flex flex-col w-full'; // Make it a column layout
     perfumeList.innerHTML = '';
 
-    perfumes.forEach(perfume => {
-        const card = document.createElement('div');
-        card.className = 'bg-white rounded-lg shadow p-4';
-        card.innerHTML = `
-            <h3 class="text-xl font-bold mb-2">${perfume.perfumer}</h3>
-            <p class="text-font-bold-700"> ${perfume.fragrance}</p>
-            <p class="text-gray-600">
-                Location: <span onclick="makeFieldEditable(this, ${perfume.id}, 'location')">${perfume.location}</span>
-            </p>
-            <p class="text-gray-600">
-                Bottle: <span onclick="makeFieldEditable(this, ${perfume.id}, 'bottle')">${perfume.bottle}</span>
-            </p>
-            <p class="text-gray-600">
-                Package: <span onclick="makeFieldEditable(this, ${perfume.id}, 'package')">${perfume.package}</span>
-            </p>
-            <p class="text-gray-600">
-                 Price:  ₽ <span onclick="makeFieldEditable(this, ${ perfume.id }, 'listed_price_ruble')">${ perfume.listed_price_ruble }</span>
-             </p>
-             <button onclick="viewPictures(${perfume.id})" class="mt-4 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700">
-                    View Pictures
-                </button>
+    perfumes.forEach((perfume, index) => {
+        const listItem = document.createElement('div');
+
+        // Alternate between white and light gray backgrounds
+        const bgColor = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+        listItem.className = `flex w-full border-b p-4 ${bgColor}`;
+
+
+        const imageContainer = document.createElement('div');
+        imageContainer.className = 'relative w-96 flex-shrink-0 ml-24';
+
+        const imageScroll = document.createElement('div');
+        imageScroll.className = 'flex overflow-x-hidden';
+
+        if (perfume.pictures && perfume.pictures.length > 0) {
+
+            perfume.pictures.forEach(picture => {
+                const img = document.createElement('img');
+                img.src = picture;
+                img.alt = 'Perfume';
+                img.className = 'w-48 h-48 object-cover';
+                img.ondblclick = () => window.open(img.src, '_blank');
+                imageScroll.appendChild(img);
+            });
+
+            if (perfume.pictures.length > 1) {
+                const leftArrow = document.createElement('button');
+                leftArrow.className = 'absolute left-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-r';
+                leftArrow.textContent = '←';
+                leftArrow.onclick = () => scrollImages(imageContainer, 'left');
+
+                const rightArrow = document.createElement('button');
+                rightArrow.className = 'absolute right-0 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-2 rounded-l';
+                rightArrow.textContent = '→';
+                rightArrow.onclick = () => scrollImages(imageContainer, 'right');
+
+                imageContainer.appendChild(leftArrow);
+                imageContainer.appendChild(rightArrow);
+            }
+        }
+
+        imageContainer.appendChild(imageScroll);
+
+        const perfumerColumn = document.createElement('div');
+        perfumerColumn.className = 'w-96 ml-48  mr-24';
+        perfumerColumn.innerHTML = `
+            <h3 class="text-xl font-bold">${perfume.perfumer}</h3>
+            <p class="text-l"> ${perfume.fragrance}</p>
+            <p class="text-gray-600">${perfume.location === 'Dubai' ?
+                `AED ${parseInt(perfume.listed_price_aed).toLocaleString()}` :
+                `₽ ${parseInt(perfume.listed_price_ruble).toLocaleString()}`}</p>
+
         `;
-        perfumeList.appendChild(card);
+
+        const specsColumn = document.createElement('div');
+        specsColumn.className = 'w-96 space-y-2';
+        specsColumn.innerHTML = `
+            <p class="text-gray-600">Location: ${perfume.location}</p>
+            <p class="text-gray-600">Bottle: ${perfume.bottle}</p>
+            <p class="text-gray-600">${perfume.package}</p>
+
+        `;
+
+        listItem.appendChild(perfumerColumn);
+        listItem.appendChild(specsColumn);
+        listItem.appendChild(imageContainer);
+        perfumeList.appendChild(listItem);
     });
 }
+
 
 function viewPictures(perfumeId) {
     fetch(`/get-pictures/${perfumeId}/`)
@@ -227,4 +315,13 @@ function updateField(perfumeId, field, value, element) {
         element.textContent = value;
         element.parentNode.replaceChild(element, element.parentNode.firstChild);
     });
+}
+
+function scrollImages(container, direction) {
+    const scrollAmount = 192; // width of image + padding
+    if (direction === 'left') {
+        container.querySelector('.flex').scrollLeft -= scrollAmount;
+    } else {
+        container.querySelector('.flex').scrollLeft += scrollAmount;
+    }
 }

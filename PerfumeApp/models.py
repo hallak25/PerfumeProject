@@ -44,7 +44,8 @@ class PerfumeTransaction(models.Model):
     sale_year = models.IntegerField(db_column='sale year', blank=True, null=True)  
     sale_month = models.IntegerField(db_column='sale month', blank=True, null=True)  
     sale_year_month = models.CharField(max_length=20,db_column='sale year_month', blank=True, null=True)
-    listed_price_ruble = models.FloatField(db_column='listed_price_ruble', blank=True, null=True,default=15000)
+    listed_price_ruble = models.FloatField(db_column='listed_price_ruble', blank=True, null=True,default=0)
+    listed_price_aed = models.FloatField(db_column='listed_price_aed', blank=True, null=True,default=0)
 
     def __str__(self):
         return f'{self.perfumer} - {self.fragrance} - {self.purchase_date}'
