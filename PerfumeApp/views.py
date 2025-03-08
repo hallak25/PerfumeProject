@@ -114,13 +114,12 @@ def catalog_view(request):
         perfumes = perfumes.filter(location=user_location)
 
     context = {
-   #     'perfumes': perfumes,
+        'perfumes': perfumes,
         'is_staff': request.user.is_staff,
         'user_location': user_location
     }
-#    return render(request, 'catalog.html', context)
-    return render(request, 'welcome.html')
-
+    return render(request, 'catalog.html', context)
+  
 
 def get_filtered_options(request):
     selected_perfumer = request.GET.get('perfumer')
