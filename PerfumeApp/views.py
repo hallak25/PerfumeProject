@@ -54,9 +54,7 @@ def all_transactions(request):
 @staff_member_required
 def get_fragrances_2(request):
     perfumer = request.GET.get('perfumer')
-    print(perfumer)
     fragrances = PerfumeTransaction.objects.filter(perfumer=perfumer).values_list('fragrance', flat=True).order_by('fragrance').distinct()
-    print(fragrances)
     return JsonResponse(list(fragrances), safe=False)
 
 
@@ -119,7 +117,7 @@ def catalog_view(request):
         'user_location': user_location
     }
     return render(request, 'catalog.html', context)
-  
+
 
 def get_filtered_options(request):
     selected_perfumer = request.GET.get('perfumer')
