@@ -119,7 +119,6 @@ def catalog_view(request):
         'is_staff': request.user.is_staff,
         'user_location': user_location
     }
-    print(f"catalog_view: {datetime.now().strftime('%H:%M:%S')}")
     return render(request, 'catalog.html', context)
 
 
