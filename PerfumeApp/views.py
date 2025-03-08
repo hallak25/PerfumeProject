@@ -114,7 +114,7 @@ def catalog_view(request):
         perfumes = perfumes.filter(location=user_location)
 
     context = {
-        'perfumes': perfumes,
+   #     'perfumes': perfumes,
         'is_staff': request.user.is_staff,
         'user_location': user_location
     }
