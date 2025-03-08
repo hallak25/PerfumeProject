@@ -106,7 +106,7 @@ def delete_image(request, image_id):
 @login_required
 def welcome_view(request):
     return render(request, 'welcome.html')
-
+@login_required
 def catalog_view(request):
     user_location = request.user.userprofile.location if not request.user.is_staff else None
     perfumes = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('perfumer', 'fragrance').prefetch_related('perfumepicture_set')
@@ -118,7 +118,8 @@ def catalog_view(request):
         'is_staff': request.user.is_staff,
         'user_location': user_location
     }
-    return render(request, 'catalog.html', context)
+#    return render(request, 'catalog.html', context)
+    return render(request, 'catalog.html')
 
 
 def get_filtered_options(request):
