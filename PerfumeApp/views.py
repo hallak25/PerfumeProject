@@ -119,7 +119,7 @@ def catalog_view(request):
         'user_location': user_location
     }
 #    return render(request, 'catalog.html', context)
-    return render(request, 'catalog.html')
+    return render(request, 'welcome.html')
 
 
 def get_filtered_options(request):
