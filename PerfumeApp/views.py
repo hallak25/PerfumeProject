@@ -22,6 +22,67 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
 
+def start_add_transaction(request):
+    return render(request, 'add_transaction.html')
+
+
+@csrf_exempt
+@staff_member_required
+def add_transaction(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            exch_rate=GlobalParameters.EXCHANGE_RATES[data['currency']]
+            price_euro=float(data['price'])/exch_rate
+            transaction = PerfumeTransaction(
+                perfumer=data['perfumer'],
+                fragrance=data['fragrance'],
+                origin=data['origin'],
+                bottle=data['bottle'],
+                package=data['package'],
+                location=data['location'],
+                price=float(data['price']),
+                purchase_currency=data['currency'],
+                purchase_date=datetime.strptime(data['date'], '%Y-%m-%d').date(),
+                discount=0.,
+                vat_back=0.,
+                purch_exch_rate=exch_rate,
+                purchase_price_euro=price_euro,
+                listed_price_ruble=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['RUB'],-3),
+                listed_price_aed=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['AED']-1)
+
+            )
+            transaction.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': f'{data["perfumer"]} - {data["fragrance"]} bought for {price_euro:.2f} EUR'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+
+
+@staff_member_required
+def get_unique_values(request):
+    perfumers = Fragrance.objects.values_list('perfumer', flat=True).order_by('perfumer').distinct()
+    origins = PerfumeTransaction.objects.values_list('origin', flat=True).exclude(origin__in=['Dubai/Kristina', 'Dubai Fair']).order_by('origin').distinct()
+    bottles = PerfumeTransaction.objects.values_list('bottle', flat=True).order_by('bottle').distinct()
+    packages = PerfumeTransaction.objects.values_list('package', flat=True).order_by('package').distinct()
+    locations = PerfumeTransaction.objects.values_list('location', flat=True).exclude(location__in=['Sold']).order_by('location').distinct()
+    currencies = PerfumeTransaction.objects.values_list('purchase_currency', flat=True).order_by('purchase_currency').distinct()
+
+    return JsonResponse({
+        'perfumers': list(perfumers),
+        'origins': list(origins),
+        'bottles': list(bottles),
+        'packages': list(packages),
+        'locations': list(locations),
+        'currencies': list(currencies)
+    })
+
+@staff_member_required
 def get_transactions(request):
     perfumer = request.GET.get('perfumer')
     fragrance = request.GET.get('fragrance')
@@ -165,9 +226,10 @@ def add_perfume_transaction(request):
             with connection.cursor() as cursor:
                 purchase_price=float(request.POST.get('price'))
                 purchase_exch_rate=GlobalParameters.EXCHANGE_RATES[request.POST.get('currency')]
-                sql_command=f"INSERT INTO PerfumeApp_perfumetransaction (perfumer, fragrance, package, bottle, origin, location, price, 'purchase currency','purchase date',discount,'vat back','purch exch rate','purchase price (euro)')" \
-                            f"  VALUES ('{request.POST.get('perfumer')}', '{request.POST.get('fragrance')}', '{request.POST.get('package')}', '{request.POST.get('bottle')}', '{request.POST.get('origin')}'," \
-                            f" '{request.POST.get('location')}',{purchase_price},'{request.POST.get('currency')}','{request.POST.get('date', date.today())}',{0.},{0.},{purchase_exch_rate},{purchase_price/purchase_exch_rate})"
+                sql_command=f'INSERT INTO "PerfumeApp_perfumetransaction" ("Perfumer", "Fragrance", "Package", "Bottle", "Origin", "Location", "Price", "Purchase Currency","Purchase date","Discount","VAT back","Purch Exch Rate","Purchase Price (euro)")'
+                sql_command+=f"  VALUES ('{request.POST.get('perfumer')}', '{request.POST.get('fragrance')}', '{request.POST.get('package')}', '{request.POST.get('bottle')}', '{request.POST.get('origin')}',"
+                sql_command+=f" '{request.POST.get('location')}',{purchase_price},'{request.POST.get('currency')}','{request.POST.get('date', date.today())}',{0.},{0.},{purchase_exch_rate},{purchase_price/purchase_exch_rate})"
+                print(sql_command)
                 cursor.execute(sql_command)
 
             messages.add_message(request,messages.INFO, 'purchase added!')
@@ -197,11 +259,13 @@ def add_perfume_transaction(request):
 def fragrance_list(request):
     """View to render the fragrance list page"""
     return render(request, 'fragrance_list.html')
+
 @staff_member_required
 def get_fragrances(request):
-    """API view to get all fragrances as JSON"""
-    fragrances = list(Fragrance.objects.all().values('id', 'perfumer', 'fragrance'))
-    return JsonResponse({'fragrances': fragrances})
+    perfumer = request.GET.get('perfumer')
+    fragrances = Fragrance.objects.filter(perfumer=perfumer).values_list('fragrance', flat=True)
+    return JsonResponse({'fragrances': list(fragrances)})
+
 @staff_member_required
 def add_fragrance(request):
     """API view to add a new fragrance"""

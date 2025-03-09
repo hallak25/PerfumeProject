@@ -14,6 +14,7 @@ class Fragrance(models.Model):
     perfumer = models.CharField(max_length=50,db_column='Perfumer', blank=True, null=True)
     fragrance = models.CharField(max_length=50,db_column='Fragrance', blank=True, null=True)
 
+
     def __str__(self):
         return f'{self.perfumer} - {self.fragrance}'
 
