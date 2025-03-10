@@ -61,10 +61,12 @@
                     <tr>
                         <th>Perfumer</th>
                         <th>Fragrance</th>
+                        <th>Bottle</th>
+                        <th>Description</th>
                         <th>Purchase Date</th>
                         <th>Purchase Price</th>
                         <th>Currency</th>
-                        <th>VAT Back</th>
+
                         <th>Purchase Price (EUR)</th>
                         <th>Origin</th>
                         <th>Location</th>
@@ -76,10 +78,12 @@
                     <tr data-perfumer="{{ item.perfumer }}" data-fragrance="{{ item.fragrance }}" data-location="{{ item.location }}" data-purchase_price_euro="{{ item.purchase_price_euro }}">
                         <td>{{ item.perfumer }}</td>
                         <td>{{ item.fragrance }}</td>
+                        <td>{{ item.bottle }}</td>
+                        <td>{{ item.package }}</td>
                         <td>{{ item.purchase_date }}</td>
                         <td>{{ item.price }}</td>
                         <td>{{ item.purchase_currency }}</td>
-                        <td>{{ item.vat_back }}</td>
+
                         <td>{{ item.purchase_price_euro|floatformat:2  }}</td>
                         <td>{{ item.origin }}</td>
                         <td>{{ item.location }}</td>
