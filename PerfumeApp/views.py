@@ -21,6 +21,104 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
+
+def start_add_transaction(request):
+    return render(request, 'add_transaction.html')
+
+
+@csrf_exempt
+@staff_member_required
+def add_transaction(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        try:
+            exch_rate=GlobalParameters.EXCHANGE_RATES[data['currency']]
+            price_euro=float(data['price'])/exch_rate
+            transaction = PerfumeTransaction(
+                perfumer=data['perfumer'],
+                fragrance=data['fragrance'],
+                origin=data['origin'],
+                bottle=data['bottle'],
+                package=data['package'],
+                location=data['location'],
+                price=float(data['price']),
+                purchase_currency=data['currency'],
+                purchase_date=datetime.strptime(data['date'], '%Y-%m-%d').date(),
+                discount=0.,
+                vat_back=0.,
+                purch_exch_rate=exch_rate,
+                purchase_price_euro=price_euro,
+                listed_price_ruble=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['RUB'],-3),
+                listed_price_aed=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['AED']-1)
+
+            )
+            transaction.save()
+            return JsonResponse({
+                'status': 'success',
+                'message': f'{data["perfumer"]} - {data["fragrance"]} bought for {price_euro:.2f} EUR'
+            })
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': str(e)
+            })
+
+
+@staff_member_required
+def get_unique_values(request):
+    perfumers = Fragrance.objects.values_list('perfumer', flat=True).order_by('perfumer').distinct()
+    origins = PerfumeTransaction.objects.values_list('origin', flat=True).exclude(origin__in=['Dubai/Kristina', 'Dubai Fair']).order_by('origin').distinct()
+    bottles = PerfumeTransaction.objects.values_list('bottle', flat=True).order_by('bottle').distinct()
+    packages = PerfumeTransaction.objects.values_list('package', flat=True).order_by('package').distinct()
+    locations = PerfumeTransaction.objects.values_list('location', flat=True).exclude(location__in=['Sold']).order_by('location').distinct()
+    currencies = PerfumeTransaction.objects.values_list('purchase_currency', flat=True).order_by('purchase_currency').distinct()
+
+    return JsonResponse({
+        'perfumers': list(perfumers),
+        'origins': list(origins),
+        'bottles': list(bottles),
+        'packages': list(packages),
+        'locations': list(locations),
+        'currencies': list(currencies)
+    })
+
+@staff_member_required
+def get_transactions(request):
+    perfumer = request.GET.get('perfumer')
+    fragrance = request.GET.get('fragrance')
+
+    query = PerfumeTransaction.objects.all()
+    if perfumer:
+        query = query.filter(perfumer=perfumer)
+    if fragrance:
+        query = query.filter(fragrance=fragrance)
+
+    purchases = query.all()
+    sales = query.exclude(sale_date__isnull=True)
+
+    return JsonResponse({
+        'purchases': list(purchases.values()),
+        'sales': list(sales.values())
+    })
+
+@staff_member_required
+def all_transactions(request):
+    perfumers = PerfumeTransaction.objects.values_list('perfumer', flat=True).order_by('perfumer').distinct()
+    fragrances = PerfumeTransaction.objects.values_list('fragrance', flat=True).order_by('fragrance').distinct()
+    transactions = PerfumeTransaction.objects.all()
+
+    return render(request, 'transactions.html', {
+        'perfumers': perfumers,
+        'fragrances': fragrances,
+        'transactions': transactions
+    })
+@staff_member_required
+def get_fragrances_2(request):
+    perfumer = request.GET.get('perfumer')
+    fragrances = PerfumeTransaction.objects.filter(perfumer=perfumer).values_list('fragrance', flat=True).order_by('fragrance').distinct()
+    return JsonResponse(list(fragrances), safe=False)
+
+
 @require_POST
 @staff_member_required
 def update_perfume(request):
@@ -43,30 +141,31 @@ def register(request):
         return redirect('login')
     return render(request, 'registration/register.html')
 
-def get_pictures(request, perfume_id):
-    perfume = PerfumeTransaction.objects.get(id=perfume_id)
-    pictures = perfume.get_pictures()
-    return JsonResponse({
-        'pictures': [{'url': picture.image.url} for picture in pictures],
-        'is_admin': request.user.is_staff
-    })
+def get_perfume_images(request, id):
 
-@user_passes_test(lambda u: u.is_staff)
-def upload_pictures(request):
-    if request.method == 'POST':
-        perfume_id = request.POST.get('perfume_id')
-        perfume = PerfumeTransaction.objects.get(id=perfume_id)
-        for image in request.FILES.getlist('images'):
-            PerfumePicture.objects.create(
-                perfume=perfume,
-                image=image
-            )
-        return JsonResponse({'status': 'success'})
+    perfume = get_object_or_404(PerfumeTransaction, id=id)
+    images = [{'id': img.id, 'url': img.image.url} for img in perfume.perfumepicture_set.all()]
+    return JsonResponse({'images': images})
 
+@csrf_exempt
+def upload_images(request, id):
+    perfume = get_object_or_404(PerfumeTransaction, id=id)
+    for image in request.FILES.getlist('images'):
+        PerfumePicture.objects.create(perfume=perfume, image=image)
+    return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def delete_image(request, image_id):
+    image = get_object_or_404(PerfumePicture, id=image_id)
+    image.delete()
+    return JsonResponse({'status': 'success'})
+@login_required
+def welcome_view(request):
+    return render(request, 'welcome.html')
 @login_required
 def catalog_view(request):
     user_location = request.user.userprofile.location if not request.user.is_staff else None
-    perfumes = PerfumeTransaction.objects.filter(sale_date__isnull=True)
+    perfumes = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('perfumer', 'fragrance').prefetch_related('perfumepicture_set')
     if not request.user.is_staff:
         perfumes = perfumes.filter(location=user_location)
 
@@ -83,7 +182,7 @@ def get_filtered_options(request):
     selected_fragrance = request.GET.get('fragrance')
     selected_location = request.GET.get('location')
 
-    queryset = PerfumeTransaction.objects.filter(sale_date__isnull=True)
+    queryset = PerfumeTransaction.objects.filter(sale_date__isnull=True).prefetch_related('perfumepicture_set')
 
     if selected_perfumer:
         queryset = queryset.filter(perfumer=selected_perfumer)
@@ -92,11 +191,24 @@ def get_filtered_options(request):
     if selected_location:
         queryset = queryset.filter(location=selected_location)
 
+    perfumes_data = []
+    for perfume in queryset:
+            pictures = [pic.image.url for pic in perfume.perfumepicture_set.all()]
+            perfumes_data.append({
+                'id': perfume.id,
+                'perfumer': perfume.perfumer,
+                'fragrance': perfume.fragrance,
+                'location': perfume.location,
+                'bottle': perfume.bottle,
+                'package': perfume.package,
+                'listed_price_ruble': perfume.listed_price_ruble,
+                'pictures': pictures
+            })
     return JsonResponse({
         'perfumers': list(queryset.values_list('perfumer', flat=True).distinct().order_by('perfumer')),
         'fragrances': list(queryset.values_list('fragrance', flat=True).distinct().order_by('fragrance')),
         'locations': list(queryset.values_list('location', flat=True).distinct()),
-         'perfumes' : list(queryset.values()),
+         'perfumes' : perfumes_data,
     })
 
 @staff_member_required
@@ -110,9 +222,10 @@ def add_perfume_transaction(request):
             with connection.cursor() as cursor:
                 purchase_price=float(request.POST.get('price'))
                 purchase_exch_rate=GlobalParameters.EXCHANGE_RATES[request.POST.get('currency')]
-                sql_command=f"INSERT INTO PerfumeApp_perfumetransaction (perfumer, fragrance, package, bottle, origin, location, price, 'purchase currency','purchase date',discount,'vat back','purch exch rate','purchase price (euro)')" \
-                            f"  VALUES ('{request.POST.get('perfumer')}', '{request.POST.get('fragrance')}', '{request.POST.get('package')}', '{request.POST.get('bottle')}', '{request.POST.get('origin')}'," \
-                            f" '{request.POST.get('location')}',{purchase_price},'{request.POST.get('currency')}','{request.POST.get('date', date.today())}',{0.},{0.},{purchase_exch_rate},{purchase_price/purchase_exch_rate})"
+                sql_command=f'INSERT INTO "PerfumeApp_perfumetransaction" ("Perfumer", "Fragrance", "Package", "Bottle", "Origin", "Location", "Price", "Purchase Currency","Purchase date","Discount","VAT back","Purch Exch Rate","Purchase Price (euro)")'
+                sql_command+=f"  VALUES ('{request.POST.get('perfumer')}', '{request.POST.get('fragrance')}', '{request.POST.get('package')}', '{request.POST.get('bottle')}', '{request.POST.get('origin')}',"
+                sql_command+=f" '{request.POST.get('location')}',{purchase_price},'{request.POST.get('currency')}','{request.POST.get('date', date.today())}',{0.},{0.},{purchase_exch_rate},{purchase_price/purchase_exch_rate})"
+
                 cursor.execute(sql_command)
 
             messages.add_message(request,messages.INFO, 'purchase added!')
@@ -142,11 +255,13 @@ def add_perfume_transaction(request):
 def fragrance_list(request):
     """View to render the fragrance list page"""
     return render(request, 'fragrance_list.html')
+
 @staff_member_required
 def get_fragrances(request):
-    """API view to get all fragrances as JSON"""
-    fragrances = list(Fragrance.objects.all().values('id', 'perfumer', 'fragrance'))
-    return JsonResponse({'fragrances': fragrances})
+    perfumer = request.GET.get('perfumer')
+    fragrances = Fragrance.objects.filter(perfumer=perfumer).values_list('fragrance', flat=True)
+    return JsonResponse({'fragrances': list(fragrances)})
+
 @staff_member_required
 def add_fragrance(request):
     """API view to add a new fragrance"""
@@ -220,7 +335,7 @@ def all_time_financial_report(request):
 
 
 def inventory_list(request):
-    transactions = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('purchase_date')
+    transactions = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('location', 'fragrance', 'purchase_date')
     perfumers = PerfumeTransaction.objects.values_list('perfumer', flat=True).distinct().order_by('perfumer')
     fragrance_names = PerfumeTransaction.objects.values_list('fragrance', flat=True).distinct().order_by('fragrance')
     locations = PerfumeTransaction.objects.values_list('location', flat=True).distinct()
@@ -231,6 +346,46 @@ def inventory_list(request):
         'fragrance_names': fragrance_names,
         'locations': locations,
     })
+
+@csrf_exempt
+def update_perfume_edit(request, id):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+
+            transaction = get_object_or_404(PerfumeTransaction, id=id)
+            transaction.location = data['location']
+            transaction.package = data['package']
+            transaction.bottle = data['bottle']
+            transaction.listed_price_ruble = data['listed_price_ruble']
+            transaction.listed_price_aed = data['listed_price_aed']
+            transaction.save()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)})
+
+def get_perfume_data(request, id):
+    try:
+        transaction = get_object_or_404(PerfumeTransaction, id=id)
+
+        data = {
+            'perfumer': transaction.perfumer,
+            'fragrance': transaction.fragrance,
+            'purchase_date': transaction.purchase_date.strftime('%Y-%m-%d'),
+            'price': str(transaction.price),
+            'purchase_currency': str(transaction.purchase_currency),
+            'origin': transaction.origin,
+            'location': transaction.location,
+            'package': transaction.package,
+            'bottle': transaction.bottle,
+            'listed_price_ruble': transaction.listed_price_ruble,
+            'listed_price_aed': transaction.listed_price_aed,
+        }
+
+
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 
 def sell_perfume(request, id):
     if request.method == 'POST':
@@ -249,7 +404,20 @@ def sell_perfume(request, id):
             transaction.sale_year=transaction.sale_date.year
             transaction.sale_month=transaction.sale_date.month
             transaction.save()
-            return JsonResponse({'status': 'success'})
+
+            return_data = {
+            'perfumer': transaction.perfumer,
+            'fragrance': transaction.fragrance,
+            'package': transaction.package,
+            'bottle': transaction.bottle,
+            'sale_price': transaction.sale_price,
+            'sale_price_eur': transaction.sale_price_eur,
+            'earnings_eur': transaction.earnings_eur,
+            'premium': transaction.premium,
+            'sale_date': transaction.sale_date,
+        }
+
+            return JsonResponse({'status': 'success','body':return_data})
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
 
