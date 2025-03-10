@@ -354,6 +354,7 @@ def update_perfume_edit(request, id):
             data = json.loads(request.body)
 
             transaction = get_object_or_404(PerfumeTransaction, id=id)
+            transaction.fragrance = data['fragrance']
             transaction.location = data['location']
             transaction.package = data['package']
             transaction.bottle = data['bottle']
