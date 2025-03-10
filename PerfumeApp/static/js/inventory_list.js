@@ -97,12 +97,6 @@
         });
     }
 
-    function formatNumber(number) {
-        return number.toLocaleString('en-US', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-        });
-    }
 
     function filterTable() {
         const perfumer = document.getElementById('perfumerFilter').value;
@@ -128,7 +122,7 @@
             }
         });
         document.getElementById('totalItems').textContent = visibleCount;
-        document.getElementById('totalCost').textContent = formatNumber(totalCostCount);
+        document.getElementById('totalCost').textContent = formatNumber(totalCostCount,2);
     }
 
     function openSellDialog(id) {
@@ -317,7 +311,7 @@
     }
 
     function formatNumber(input_value,FractionDigits) {
-        return parseFloat(input_value).toLocaleString(undefined, {
+        return parseFloat(input_value).toLocaleString('en-US', {
             minimumFractionDigits: FractionDigits,
             maximumFractionDigits: FractionDigits
         });
