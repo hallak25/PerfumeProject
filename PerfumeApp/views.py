@@ -335,7 +335,7 @@ def all_time_financial_report(request):
 
 
 def inventory_list(request):
-    transactions = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('location', 'fragrance', 'purchase_date')
+    transactions = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('location','perfumer', 'fragrance', 'purchase_date')
     perfumers = PerfumeTransaction.objects.values_list('perfumer', flat=True).distinct().order_by('perfumer')
     fragrance_names = PerfumeTransaction.objects.values_list('fragrance', flat=True).distinct().order_by('fragrance')
     locations = PerfumeTransaction.objects.values_list('location', flat=True).distinct()
