@@ -131,6 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th>Sale Date</th>
                         <th>Perfumer</th>
                         <th>Fragrance</th>
+                        <th>Sale Price</th>
                         <th>Sale Price (EUR)</th>
                         <th>Earnings (EUR)</th>
                         <th>Premium (%)</th>
@@ -143,6 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${t.sale_date}</td>
                             <td>${t.perfumer}</td>
                             <td>${t.fragrance}</td>
+                            <td>${formatNumber(t.sale_price)}</td>
                             <td>${t.sale_price_eur.toFixed(2)}</td>
                             <td>${t.earnings_eur.toFixed(2)}</td>
                             <td>${(t.premium*100.).toFixed(0)}</td>
