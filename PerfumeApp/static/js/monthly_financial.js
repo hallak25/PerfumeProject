@@ -1,4 +1,10 @@
-
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const day = date.getDate().toString().padStart(2, '0');
+            const month = date.toLocaleString('en-GB', { month: 'short' });
+            const year = date.getFullYear().toString().slice(-2);
+            return `${day}-${month}-${year}`;
+        }
 
 
 
@@ -27,7 +33,7 @@
                     <tbody>
                         ${transactions.map(t => `
                             <tr>
-                                <td>${t.purchase_date}</td>
+                                <td>${formatDate(t.purchase_date)}</td>
                                 <td>${t.perfumer}</td>
                                 <td>${t.fragrance}</td>
                                 <td>${t.origin}</td>
@@ -50,12 +56,13 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Purchase Date</th>
-                            <th>Origin</th>
-                            <th>Description</th>
                             <th>Sale Date</th>
                             <th>Perfumer</th>
                             <th>Fragrance</th>
+                            <th>Purchase Date</th>
+                            <th>Origin</th>
+                            <th>Description</th>
+                            <th>Sale Price</th>
                             <th>Sale Price (EUR)</th>
                             <th>Earnings (EUR)</th>
                             <th>Premium</th>
@@ -64,12 +71,13 @@
                     <tbody>
                         ${transactions.map(t => `
                             <tr>
-                                <td>${t.purchase_date}</td>
-                                <td>${t.origin}</td>
-                                <td>${t.package}</td>
-                                <td>${t.sale_date}</td>
+                                <td>${formatDate(t.sale_date)}</td>
                                 <td>${t.perfumer}</td>
                                 <td>${t.fragrance}</td>
+                                <td>${formatDate(t.purchase_date)}</td>
+                                <td>${t.origin}</td>
+                                <td>${t.package}</td>
+                                <td>${formatNumber(t.sale_price,0)}</td>
                                 <td>${formatNumber(t.sale_price_eur,2)}</td>
                                 <td>${formatNumber(t.earnings_eur,2)}</td>
                                 <td>${formatNumber(t.premium*100.,0)}%</td>
@@ -148,7 +156,26 @@
                 yearMonthSelect.value = latestYearMonth;
 
             }
+
           updateLists()
+          const selectedDate = new Date(document.getElementById('yearMonth').value + '-01');
+          const formattedMonth = selectedDate.toLocaleString('en-GB', { month: 'long', year: '2-digit' });
+          document.querySelector('.list:nth-child(2) h2').textContent = `${formattedMonth} - Purchases`;
+          document.querySelector('.list:nth-child(3) h2').textContent = `${formattedMonth} - Sales`;
            });
 
-          document.getElementById('yearMonth').addEventListener('change', updateLists);
+          document.getElementById('yearMonth').addEventListener('change', function() {
+                const selectedDate = new Date(this.value + '-01');
+                const formattedMonth = selectedDate.toLocaleString('en-GB', { month: 'long', year: '2-digit' });
+
+                document.querySelector('.list:nth-child(2) h2').textContent = `${formattedMonth} - Purchases`;
+                document.querySelector('.list:nth-child(3) h2').textContent = `${formattedMonth} - Sales`;
+                updateLists()
+            });
+
+          document.querySelectorAll('#yearMonth option').forEach(option => {
+                if (option.value) {
+                    const date = new Date(option.value + '-01');
+                    option.textContent = date.toLocaleString('en-GB', { month: 'long', year: '2-digit' });
+                }
+            });

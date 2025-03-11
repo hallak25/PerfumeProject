@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>
                     ${transactions.map(t => `
                         <tr class="${t.sale_date === null ? 'unsold' : ''}">
-                            <td>${t.purchase_date}</td>
+                            <td>${formatDate(t.purchase_date)}</td>
                             <td>${t.perfumer}</td>
                             <td>${t.fragrance}</td>
                             <td>${t.origin}</td>
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>
                     ${transactions.map(t => `
                         <tr>
-                            <td>${t.purchase_date}</td>
+                            <td>${formatDate(t.purchase_date)}</td>
                             <td>${t.sale_date}</td>
                             <td>${t.perfumer}</td>
                             <td>${t.fragrance}</td>
@@ -157,6 +157,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function formatNumber(number) {
         return number.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = date.toLocaleString('en-GB', { month: 'short' });
+        const year = date.getFullYear().toString().slice(-2);
+        return `${day}-${month}-${year}`;
     }
 
     // Initial load
