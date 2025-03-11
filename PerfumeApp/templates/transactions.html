@@ -3,90 +3,151 @@
 <html>
 <head>
     <title>Perfume Transactions</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #34495e;
+            --accent-color: #3498db;
+            --background-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            --box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            --border-radius: 12px;
+        }
+
         body {
             font-family: 'Montserrat', sans-serif;
             margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 0;
+            background: var(--background-gradient);
             min-height: 100vh;
+            color: var(--primary-color);
         }
-       .container {
-            max-width: 95%;
-            margin: 0 auto;
+
+        .filters-section {
+            background-color: #0d6efd;
+            padding: 30px;
+            width: 100%;
+            margin-bottom: 30px;
         }
+
+
         .filters {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            margin: 0 50px;  /* Match the lists-container margin */
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            justify-content: center;
         }
+
+        .content-container {
+            padding: 0 30px;
+        }
+
         select {
-            padding: 10px;
-            margin-right: 10px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
             font-size: 14px;
-            min-width: 200px;
+            min-width: 220px;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
+
+        select:hover {
+            border-color: var(--accent-color);
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+        }
+
+
         .lists-container {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 20px;
+            gap: 30px;
+            margin: 0 50px;  /* Increased side margins */
+            max-width: none;
         }
 
         .list {
             background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: transform 0.3s ease;
         }
+
+
+
         .list h2 {
-            color: #333;
+            color: var(--primary-color);
             margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eef2f7;
+            font-size: 1.5rem;
+            font-weight: 600;
         }
+
         table {
             width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-top: 15px;
         }
+
         th, td {
-            padding: 8px;
+            padding: 12px 15px;
             text-align: left;
-            border-bottom: 1px solid #f0f0f0;
-            font-size: 13px;
+            border-bottom: 1px solid #eef2f7;
+            font-size: 14px;
         }
+
         th {
             background: #f8f9fa;
             font-weight: 600;
+            color: var(--secondary-color);
+            position: sticky;
+            top: 0;
         }
-        .summary {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 2px solid #f0f0f0;
-            font-weight: 600;
-        }
-        .inventory-summary {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-top: 20px;
-            text-align: center;
+
+        tr:hover {
+            background-color: #f8f9fa;
         }
 
         tr.unsold {
-            background-color: #e8f4f8;
+            background-color: #ebf5fb;
             font-weight: 500;
+        }
+
+        tr.unsold:hover {
+            background-color: #d6eaf8;
+        }
+
+        .summary {
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 2px solid #eef2f7;
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        @media (max-width: 768px) {
+            .filters {
+                flex-direction: column;
+            }
+
+            select {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="filters-section">
         <div class="filters">
             <select id="perfumer">
                 <option value="">Select Perfumer</option>
@@ -101,7 +162,9 @@
                 {% endfor %}
             </select>
         </div>
+    </div>
 
+    <div class="content-container">
         <div class="lists-container">
             <div class="list">
                 <h2>Purchases</h2>
@@ -119,7 +182,6 @@
                 <div id="inventory-summary" class="summary"></div>
             </div>
         </div>
-
     </div>
 
     <script src="{% static 'js/transactions.js' %}"></script>

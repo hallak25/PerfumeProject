@@ -20,7 +20,10 @@
                 <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Financial Results" height="200">
                 <div class="card-body">
                     <h6 class="card-title">Financial Report</h6>
-                    <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm w-100 mt-auto py-2">Financials</a>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm w-50 mt-auto py-2">all time</a>
+                        <a href="{% url 'monthly' %}" class="btn btn-primary btn-sm w-50 mt-auto py-2">monthly</a>
+                    </div>
                 </div>
             </div>
         </div>
