@@ -102,7 +102,7 @@
             purchasesList.innerHTML = html;
 
             const total = purchases.reduce((sum, p) => sum + parseFloat(p.purchase_price_euro), 0);
-            purchasesSummary.innerHTML = `Total: ${purchases.length} transactions. ${formatNumber(total,0)} EUR`;
+            purchasesSummary.innerHTML = `${purchases.length} purchases. ${formatNumber(total,0)} EUR`;
         }
 
         function updateSalesList(sales) {
@@ -126,8 +126,8 @@
             const avgPremium = sales.length > 0 ? totals.earnings / totals.purchases : 0;
 
             salesSummary.innerHTML = `
-                Total ${sales.length} transactions.
-                Sales: ${formatNumber(totals.sales,0)} EUR.
+                ${sales.length} sales.
+                 Sales: ${formatNumber(totals.sales,0)} EUR.
                 Earnings: ${formatNumber(totals.earnings,0)} EUR.
                 Average Premium: ${formatNumber(avgPremium*100.,0)}%
             `;
