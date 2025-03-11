@@ -22,6 +22,42 @@ from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 
 
+
+
+
+def monthly_financial(request):
+    # Get distinct year-months from all dates
+    purchase_dates = PerfumeTransaction.objects.dates('purchase_date', 'month')
+    sale_dates = PerfumeTransaction.objects.dates('sale_date', 'month')
+    all_dates = list(set(purchase_dates) | set(sale_dates))
+    all_dates.sort(reverse=True)
+
+    year_months = [date.strftime('%Y-%m') for date in all_dates]
+
+    return render(request, 'monthly_financial.html', {
+        'year_months': year_months
+    })
+
+@staff_member_required
+def get_monthly_transactions(request):
+    year_month = request.GET.get('year_month')
+    year, month = year_month.split('-')
+
+    purchases = PerfumeTransaction.objects.filter(
+        purchase_date__year=year,
+        purchase_date__month=month
+    )
+
+    sales = PerfumeTransaction.objects.filter(
+        sale_date__year=year,
+        sale_date__month=month
+    )
+
+    return JsonResponse({
+        'purchases': list(purchases.values()),
+        'sales': list(sales.values())
+    })
+
 def start_add_transaction(request):
     return render(request, 'add_transaction.html')
 
@@ -49,7 +85,7 @@ def add_transaction(request):
                 purch_exch_rate=exch_rate,
                 purchase_price_euro=price_euro,
                 listed_price_ruble=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['RUB'],-3),
-                listed_price_aed=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['AED']-1)
+                listed_price_aed=round(price_euro*(1.+GlobalParameters.TARGET_PREMIUM)*GlobalParameters.EXCHANGE_RATES['AED'],-1)
 
             )
             transaction.save()

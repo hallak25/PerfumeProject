@@ -32,6 +32,8 @@ urlpatterns = [
     path('get_fragrances/', views.get_fragrances, name='get_fragrances'),
     path('add_transaction/', views.add_transaction, name='add_transaction'),
     path('start_add_transaction/', views.start_add_transaction, name='start_add_transaction'),
+    path('monthly/', views.monthly_financial, name='monthly'),
+    path('monthly/transactions/', views.get_monthly_transactions, name='get_monthly_transactions'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
