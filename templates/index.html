@@ -1,0 +1,62 @@
+{% extends 'base_index.html' %}
+
+{% block title %}Exquisite Scents - Premium Perfumes{% endblock %}
+
+{% block content %}
+{% load static %}
+<div class="jumbotron text-center py-5 mb-0">
+    <h1 class="display-4">Welcome to Exquisite Scents</h1>
+    <p class="lead">All you need to manage your business</p>
+</div>
+<style>
+.btn {
+    border-radius: 0.25rem !important;
+}
+</style>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 shadow-sm card-hover">
+                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Financial Results" height="200">
+                <div class="card-body">
+                    <h6 class="card-title">Financial Report</h6>
+                    <div class="d-flex gap-2">
+                        <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm w-50 mt-auto py-2">all time</a>
+                        <a href="{% url 'monthly' %}" class="btn btn-primary btn-sm w-50 mt-auto py-2">monthly</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 shadow-sm card-hover">
+                <img src="{% static 'images/purchase.jpg' %}" class="card-img-top" alt="Purchase Perfumes" height="200">
+                <div class="card-body">
+                    <h6 class="card-title">New Purchases</h6>
+                    <a href="{% url 'start_add_transaction' %}" class="btn btn-success btn-sm w-100 mt-auto py-2">Purchase</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 shadow-sm card-hover">
+                <img src="{% static 'images/perfume_stock.jpg' %}" class="card-img-top" alt="Stock Information" height="200">
+                <div class="card-body">
+                    <h6 class="card-title">Inventory / New Sales</h6>
+                    <a href="{% url 'inventory_list' %}" class="btn btn-warning btn-sm w-100 mt-auto py-2">Inventory</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card h-100 shadow-sm card-hover">
+                <img src="{% static 'images/transactions.jpg' %}" class="card-img-top" alt="Stock Information" height="200">
+                <div class="card-body">
+                    <h6 class="card-title">Transactions</h6>
+                    <a href="{% url 'all_transactions' %}" class="btn btn-danger btn-sm w-100 mt-auto py-2">Transactions</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

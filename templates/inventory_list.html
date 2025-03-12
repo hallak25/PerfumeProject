@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Perfume Inventory</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        .filters {
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .summary {
+            background-color: #e9ecef;
+            padding: 20px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .table-container {
+            margin: 20px 0;
+        }
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid mt-4">
+        <div class="bg-primary bg-gradient py-4 mb-4">
+            <div class="container-fluid position-relative">
+                <a href="/index" class="btn btn-light position-absolute start-0 ms-4">Home</a>
+                <div class="text-center">
+                    <h1 class="h2 fw-bold text-white mb-0">Perfume Inventory</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="filters bg-primary bg-gradient text-white">
+            <div class="row">
+                <div class="col-md-4">
+                    <select id="perfumerFilter" class="form-select">
+                        <option value="">Select Perfumer</option>
+                        {% for perfumer in perfumers %}
+                            <option value="{{ perfumer }}">{{ perfumer }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="fragranceFilter" class="form-select">
+                        <option value="">Select Fragrance</option>
+                        {% for fragrance in fragrance_names %}
+                            <option value="{{ fragrance }}">{{ fragrance }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="locationFilter" class="form-select">
+                        <option value="">Select Location</option>
+                        {% for location in locations %}
+                            <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Perfumer</th>
+                        <th>Fragrance</th>
+                        <th>Bottle</th>
+                        <th>Description</th>
+                        <th>Purchase Date</th>
+                        <th>Purchase Price</th>
+                        <th>Currency</th>
+
+                        <th>Purchase Price (EUR)</th>
+                        <th>Origin</th>
+                        <th>Location</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="fragranceTable">
+                    {% for item in transactions %}
+                    <tr data-perfumer="{{ item.perfumer }}" data-fragrance="{{ item.fragrance }}" data-location="{{ item.location }}" data-purchase_price_euro="{{ item.purchase_price_euro }}">
+                        <td>{{ item.perfumer }}</td>
+                        <td>{{ item.fragrance }}</td>
+                        <td>{{ item.bottle }}</td>
+                        <td>{{ item.package }}</td>
+                        <td>{{ item.purchase_date|date:"d-M-y" }}</td>
+                        <td>{{ item.price }}</td>
+                        <td>{{ item.purchase_currency }}</td>
+
+                        <td>{{ item.purchase_price_euro|floatformat:2  }}</td>
+                        <td>{{ item.origin }}</td>
+                        <td>{{ item.location }}</td>
+                        <td>
+                            <button class="btn btn-primary btn-sm" onclick="openSellDialog({{ item.id }})">Sell</button>
+                            <button class="btn btn-secondary btn-sm" onclick="openEditDialog({{ item.id }})">Edit</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="summary">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4>Total Items: <span id="totalItems">0</span></h4>
+                </div>
+                <div class="col-md-6">
+                    <h4>Total Cost: <span id="totalCost">0.00</span> Euros</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sell Modal -->
+    <div class="modal fade" id="sellModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sell Perfume</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Sale Date</label>
+                        <input type="date" class="form-control" id="saleDate">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Sale Price</label>
+                        <input type="number" class="form-control" id="salePrice" step="0.01">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Currency</label>
+                        <select class="form-select" id="saleCurrency">
+                            <option value="AED">AED</option>
+                            <option value="RUB">RUB</option>
+                        </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitSale()">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- Edit Modal -->
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Perfume Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Perfumer</label>
+                                <input type="text" class="form-control" id="editPerfumer">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Fragrance</label>
+                                <input type="text" class="form-control" id="editFragrance">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Purchase Date</label>
+                                <input type="date" class="form-control" id="editPurchaseDate">
+                            </div>
+
+                        </div>
+                        <!-- Right Column -->
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Purchase Price</label>
+                                <input type="number" class="form-control" id="editPurchasePrice" step="0.01">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Origin</label>
+                                <input type="text" class="form-control" id="editOrigin">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Location</label>
+                                <select class="form-select" id="editLocation">
+                                    <option value="Dubai">Dubai</option>
+                                    <option value="Moscow">Moscow</option>
+                                    <option value="London">London</option>
+                                    <option value="Paris">Paris</option>
+                                </select>
+                            </div>
+
+
+                        </div>
+
+                        <div class="col-md-4">
+
+
+                            <div class="mb-3">
+                                <label class="form-label">Bottle</label>
+                                <input type="text" class="form-control" id="editBottle">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <input type="text" class="form-control" id="editPackage">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Listed Price Ruble</label>
+                                <input type="text" class="form-control" id="editListed_price_ruble">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Listed Price AED</label>
+                                <input type="text" class="form-control" id="editListed_price_aed">
+                            </div>
+                        </div>
+
+                        <!-- New Images Section -->
+                        <div class="col-12 mt-3">
+                            <h5>Images</h5>
+                            <div class="row" id="imageGallery">
+                                <!-- Images will be loaded here -->
+                            </div>
+                            <div class="mt-3">
+                                <input type="file" id="imageUpload" multiple accept="image/*" class="form-control">
+                                <div class="mt-2" id="uploadProgress"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="submitEdit()">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/inventory_list.js' %}"></script>
+
+</body>
+</html>
