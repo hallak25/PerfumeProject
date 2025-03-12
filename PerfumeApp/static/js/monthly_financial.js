@@ -130,7 +130,6 @@
                     premium: acc.premium + parseFloat(s.premium)
                 };
             }, {purchases: 0, sales: 0, earnings: 0, premium: 0 });
-            console.log(totals)
             const avgPremium = sales.length > 0 ? totals.earnings / totals.purchases : 0;
 
             salesSummary.innerHTML = `
