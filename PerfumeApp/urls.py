@@ -7,6 +7,9 @@ from django.contrib.auth.views import LogoutView
 urlpatterns = [
     path('index/', views.index, name='index'),
     path('', views.welcome_view, name='main'),
+    path('catalog/', views.catalog_view, name='catalog'),
+    path('ru/', views.welcome_view_ru, name='main_ru'),
+    path('catalog_ru/', views.catalog_view_ru, name='catalog_ru'),
     path('welcome/', views.welcome_view, name='welcome'),
     path('logout/', LogoutView.as_view(next_page='login'), name='logout'),
     path('fragrances/list/', views.fragrance_list, name='fragrance_list'),
@@ -18,7 +21,7 @@ urlpatterns = [
     path('sell/<int:id>/', views.sell_perfume, name='sell_perfume'),
     path('update/<int:id>/', views.update_perfume_edit, name='update_perfume_edit'),
     path('get-perfume/<int:id>/', views.get_perfume_data, name='get_perfume_data'),
-    path('catalog/', views.catalog_view, name='catalog'),
+
     path('get-filtered-options/', views.get_filtered_options, name='get_filtered_options'),
     path('get-perfume-images/<int:id>/', views.get_perfume_images, name='get_perfume_images'),
     path('upload-images/<int:id>/', views.upload_images, name='upload_images'),

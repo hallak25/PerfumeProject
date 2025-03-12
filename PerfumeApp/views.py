@@ -195,10 +195,14 @@ def delete_image(request, image_id):
     image = get_object_or_404(PerfumePicture, id=image_id)
     image.delete()
     return JsonResponse({'status': 'success'})
-@login_required
+
 def welcome_view(request):
     return render(request, 'welcome.html')
-@login_required
+
+
+def welcome_view_ru(request):
+    return render(request, 'welcome_ru.html')
+
 def catalog_view(request):
     user_location = request.user.userprofile.location if not request.user.is_staff else None
     perfumes = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('perfumer', 'fragrance').prefetch_related('perfumepicture_set')
@@ -212,6 +216,15 @@ def catalog_view(request):
     }
     return render(request, 'catalog.html', context)
 
+
+def catalog_view_ru(request):
+    perfumes = PerfumeTransaction.objects.filter(sale_date__isnull=True).order_by('perfumer', 'fragrance').prefetch_related('perfumepicture_set')
+    perfumes = perfumes.filter(location='Moscow')
+
+    context = {
+        'perfumes': perfumes,
+    }
+    return render(request, 'catalog_ru.html', context)
 
 def get_filtered_options(request):
     selected_perfumer = request.GET.get('perfumer')

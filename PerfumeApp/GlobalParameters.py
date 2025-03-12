@@ -1,4 +1,4 @@
-EXCHANGE_RATES = {'EUR':1.0, 'GBP':0.83, 'AED':4.09, 'RUB':95.}
+EXCHANGE_RATES = {'EUR':1.0, 'GBP':0.84, 'AED':3.99, 'RUB':95.}
 
 PARIS = 'Paris'
 LONDON = 'London'
