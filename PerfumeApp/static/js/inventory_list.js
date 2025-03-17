@@ -177,10 +177,9 @@
             if (data.status === 'success') {
                 const message = `Sale recorded successfully!\n
                  ${data.body.perfumer} - ${data.body.fragrance} \n
-                Date: ${formatDate(data.body.sale_date)} \n
-                Price: ${formatNumber(data.body.sale_price,0)} - EUR ${formatNumber(data.body.sale_price_eur,2)} \n
-                Earning: EUR ${formatNumber(data.body.earnings_eur,2)} - Premium: ${formatNumber(data.body.premium*100.,0)} %`;
-
+                Date: ${formatDate(data.body.sale_date)} - Price: ${formatNumber(data.body.sale_price,0)} ${data.body.sale_currency} \n
+                Exchange Rate: ${formatNumber(data.body.exch_rate,2)} - Price: ${formatNumber(data.body.sale_price_eur,2)} EUR \n
+                Earning: ${formatNumber(data.body.earnings_eur,2)} EUR - Premium: ${formatNumber(data.body.premium*100.,0)} %`;
                 alert(message);
 
             } else {
