@@ -20,6 +20,7 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
+from . import Tools
 
 
 
@@ -439,13 +440,20 @@ def get_perfume_data(request, id):
 
 def sell_perfume(request, id):
     if request.method == 'POST':
+        exchange = Tools.CurrencyExchange("EUR")
+
+
         try:
             data = json.loads(request.body)
+             # Get current EUR to sale currency rate
+            exch_rate = exchange.get_rate(data['sale_currency'])
+            if exch_rate is None:
+                exch_rate=GlobalParameters.EXCHANGE_RATES[data['sale_currency']]
             transaction = get_object_or_404(PerfumeTransaction, id=id)
             transaction.sale_date = datetime.strptime(data['sale_date'], '%Y-%m-%d')
             transaction.sale_price = float(data['sale_price'])
-            transaction.sale_exch_rate = GlobalParameters.EXCHANGE_RATES[data['sale_currency']]
-            transaction.sale_price_eur = float(data['sale_price']) / GlobalParameters.EXCHANGE_RATES[data['sale_currency']]
+            transaction.sale_exch_rate = exch_rate
+            transaction.sale_price_eur = float(data['sale_price']) / exch_rate
             transaction.earnings_eur=transaction.sale_price_eur-transaction.purchase_price_euro
             transaction.premium=transaction.earnings_eur/transaction.purchase_price_euro
             transaction.location='Sold'
@@ -461,10 +469,12 @@ def sell_perfume(request, id):
             'package': transaction.package,
             'bottle': transaction.bottle,
             'sale_price': transaction.sale_price,
+            'exch_rate': transaction.sale_exch_rate,
             'sale_price_eur': transaction.sale_price_eur,
             'earnings_eur': transaction.earnings_eur,
             'premium': transaction.premium,
             'sale_date': transaction.sale_date,
+            'sale_currency': data['sale_currency'],
         }
 
             return JsonResponse({'status': 'success','body':return_data})
