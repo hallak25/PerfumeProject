@@ -107,7 +107,7 @@ def get_unique_values(request):
     origins = PerfumeTransaction.objects.values_list('origin', flat=True).exclude(origin__in=['Dubai/Kristina', 'Dubai Fair']).order_by('origin').distinct()
     bottles = PerfumeTransaction.objects.values_list('bottle', flat=True).order_by('bottle').distinct()
     packages = PerfumeTransaction.objects.values_list('package', flat=True).order_by('package').distinct()
-    locations = PerfumeTransaction.objects.values_list('location', flat=True).exclude(location__in=['Sold']).order_by('location').distinct()
+    locations = ['Dubai','London','Moscow','Paris']
     currencies = PerfumeTransaction.objects.values_list('purchase_currency', flat=True).order_by('purchase_currency').distinct()
 
     return JsonResponse({
