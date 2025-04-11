@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${transactions.map(t => `
                         <tr>
                             <td>${formatDate(t.purchase_date)}</td>
-                            <td>${t.sale_date}</td>
+                            <td>${formatDate(t.sale_date)}</td>
                             <td>${t.perfumer}</td>
                             <td>${t.fragrance}</td>
                             <td>${formatNumber(t.sale_price)}</td>
