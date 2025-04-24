@@ -63,6 +63,7 @@
                             <th>Origin</th>
                             <th>Description</th>
                             <th>Sale Price</th>
+                            <th>Exchange Rate</th>
                             <th>Sale Price (EUR)</th>
                             <th>Earnings (EUR)</th>
                             <th>Premium</th>
@@ -78,6 +79,7 @@
                                 <td>${t.origin}</td>
                                 <td>${t.package}</td>
                                 <td>${formatNumber(t.sale_price,0)}</td>
+                                <td>${t.sale_exch_rate.toFixed(1)}</td>
                                 <td>${formatNumber(t.sale_price_eur,2)}</td>
                                 <td>${formatNumber(t.earnings_eur,2)}</td>
                                 <td>${formatNumber(t.premium*100.,0)}%</td>
@@ -125,16 +127,18 @@
             const totals = sales.reduce((acc, s) => {
                 return {
                     purchases: acc.purchases + parseFloat(s.purchase_price_euro),
-                    sales: acc.sales + parseFloat(s.sale_price_eur),
+                    sales: acc.sales + parseFloat(s.sale_price),
+                    sales_eur: acc.sales_eur + parseFloat(s.sale_price_eur),
                     earnings: acc.earnings + parseFloat(s.earnings_eur),
                     premium: acc.premium + parseFloat(s.premium)
                 };
-            }, {purchases: 0, sales: 0, earnings: 0, premium: 0 });
+            }, {purchases: 0, sales: 0, sales_eur: 0, earnings: 0, premium: 0 });
             const avgPremium = sales.length > 0 ? totals.earnings / totals.purchases : 0;
 
             salesSummary.innerHTML = `
                 ${sales.length} sales.
-                 Sales: ${formatNumber(totals.sales,0)} EUR.
+                ${formatNumber(totals.sales,0)} RUB.
+                ${formatNumber(totals.sales_eur,0)} EUR.
                 Earnings: ${formatNumber(totals.earnings,0)} EUR.
                 Average Premium: ${formatNumber(avgPremium*100.,0)}%
             `;
