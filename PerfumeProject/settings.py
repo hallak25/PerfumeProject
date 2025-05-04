@@ -77,9 +77,10 @@ WSGI_APPLICATION = 'PerfumeProject.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'perfumedb',
+        'NAME': 'perfumedbsmall',
         'USER': 'elias',
         'PASSWORD': 'Bp2-amoco',
+
         'HOST': 'perfumedb.c87wsgyw4zra.us-east-1.rds.amazonaws.com',
         'PORT': '5432'
     }
