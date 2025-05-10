@@ -81,7 +81,7 @@
                                 <td>${t.package}</td>
                                 <td>${formatNumber(t.sale_price,0)}</td>
                                 <td>${t.sale_currency}</td>
-                                <td>${t.sale_exch_rate.toFixed(1)}</td>
+                                <td>${t.sale_exch_rate.toFixed(2)}</td>
                                 <td>${formatNumber(t.sale_price_eur,2)}</td>
                                 <td>${formatNumber(t.earnings_eur,2)}</td>
                                 <td>${formatNumber(t.premium*100.,0)}%</td>
