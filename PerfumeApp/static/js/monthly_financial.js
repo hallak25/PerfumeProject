@@ -19,15 +19,15 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Purchase Date</th>
+                            <th>Date</th>
                             <th>Perfumer</th>
                             <th>Fragrance</th>
                             <th>Origin</th>
                             <th>Bottle</th>
                             <th>Description</th>
-                            <th>Purchase Price</th>
-                            <th>Purchase Currency</th>
-                            <th>Purchase Price (EUR)</th>
+                            <th>Price</th>
+                            <th>Currency</th>
+                            <th>Price (EUR)</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,15 +56,16 @@
                 <table>
                     <thead>
                         <tr>
-                            <th>Sale Date</th>
+                            <th>Date</th>
                             <th>Perfumer</th>
                             <th>Fragrance</th>
                             <th>Purchase Date</th>
                             <th>Origin</th>
                             <th>Description</th>
-                            <th>Sale Price</th>
+                            <th>Price</th>
+                            <th>Currency</th>
                             <th>Exchange Rate</th>
-                            <th>Sale Price (EUR)</th>
+                            <th>Price (EUR)</th>
                             <th>Earnings (EUR)</th>
                             <th>Premium</th>
                         </tr>
@@ -79,6 +80,7 @@
                                 <td>${t.origin}</td>
                                 <td>${t.package}</td>
                                 <td>${formatNumber(t.sale_price,0)}</td>
+                                <td>${t.sale_currency}</td>
                                 <td>${t.sale_exch_rate.toFixed(1)}</td>
                                 <td>${formatNumber(t.sale_price_eur,2)}</td>
                                 <td>${formatNumber(t.earnings_eur,2)}</td>
@@ -115,7 +117,8 @@
             purchasesSummary.innerHTML = `${purchases.length} purchases. ${formatNumber(total,0)} EUR`;
         }
 
-        function updateSalesList(sales) {
+        function updateSalesList(sales)
+        {
             const salesList = document.getElementById('sales-list');
             const salesSummary = document.getElementById('sales-summary');
 
@@ -125,20 +128,29 @@
             salesList.innerHTML = html;
 
             const totals = sales.reduce((acc, s) => {
+                // Split sales by currency
+                if (s.sale_currency === 'RUB') {
+                    acc.sales_rub += parseFloat(s.sale_price);
+                } else if (s.sale_currency === 'AED') {
+                    acc.sales_aed += parseFloat(s.sale_price);
+                }
+
                 return {
                     purchases: acc.purchases + parseFloat(s.purchase_price_euro),
-                    sales: acc.sales + parseFloat(s.sale_price),
+                    sales_rub: acc.sales_rub,
+                    sales_aed: acc.sales_aed,
                     sales_eur: acc.sales_eur + parseFloat(s.sale_price_eur),
                     earnings: acc.earnings + parseFloat(s.earnings_eur),
                     premium: acc.premium + parseFloat(s.premium)
                 };
-            }, {purchases: 0, sales: 0, sales_eur: 0, earnings: 0, premium: 0 });
+            }, { purchases: 0,sales_rub: 0, sales_aed: 0, sales_eur: 0, earnings: 0, premium: 0 });
             const avgPremium = sales.length > 0 ? totals.earnings / totals.purchases : 0;
 
             salesSummary.innerHTML = `
                 ${sales.length} sales.
-                ${formatNumber(totals.sales,0)} RUB.
-                ${formatNumber(totals.sales_eur,0)} EUR.
+                ${formatNumber(totals.sales_rub,0)} RUB.
+                ${totals.sales_aed > 0 ? `${formatNumber(totals.sales_aed,0)} AED.` : ''}
+                Total: ${formatNumber(totals.sales_eur,0)} EUR.
                 Earnings: ${formatNumber(totals.earnings,0)} EUR.
                 Average Premium: ${formatNumber(avgPremium*100.,0)}%
             `;
