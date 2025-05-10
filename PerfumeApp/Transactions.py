@@ -19,17 +19,25 @@ def all_time_report(df_transactions):
         df_purchase = df_purchase.rename(columns={'purchase year_month': 'year_month'})
         df_sale = df_transactions.copy()
         df_sale = df_sale[~df_sale['sale_date'].isnull()]
+        df_sale['sale_price_rub'] = df_sale.apply(
+                lambda row: row['sale_price'] if row['sale_currency'] == 'RUB' else 0,
+                axis=1
+            )
+        df_sale['sale_price_aed'] = df_sale.apply(
+                lambda row: row['sale_price'] if row['sale_currency'] == 'AED' else 0,
+                axis=1
+            )
         df_sale = df_sale.groupby(['sale year_month']).agg(
-            {'sale_price_eur': 'sum', 'earnings_eur': 'sum','sale_price' : 'sum'}).reset_index()
+            {'sale_price_eur': 'sum', 'earnings_eur': 'sum','sale_price_rub' : 'sum','sale_price_aed' : 'sum'}).reset_index()
         df_sale = df_sale.rename(columns={'sale year_month': 'year_month'})
         df_monthly = df_sale.merge(df_purchase, on=['year_month'], how='outer')
         df_monthly = df_monthly.sort_values(['year_month'])
 
-        df_monthly=df_monthly.rename(columns={'year_month':'month','sale_price_eur':'Sales (EUR)','purchase_price_euro':'Purchases (EUR)','sale_price':'Sales (kRUB)','earnings_eur':'Earnings (EUR)'})
-        df_monthly=df_monthly[['month','Purchases (EUR)','Sales (kRUB)','Sales (EUR)','Earnings (EUR)']]
+        df_monthly=df_monthly.rename(columns={'year_month':'month','sale_price_eur':'Total Sales (EUR)','purchase_price_euro':'Purchases (EUR)','sale_price_rub':'Sales (kRUB)','sale_price_aed':'Sales (AED)','earnings_eur':'Earnings (EUR)'})
+        df_monthly=df_monthly[['month','Purchases (EUR)','Sales (kRUB)','Sales (AED)','Total Sales (EUR)','Earnings (EUR)']]
         df_monthly=df_monthly.sort_values('month',ascending=False)
         df_monthly['Sales (kRUB)']=df_monthly['Sales (kRUB)']/1000
-        df_monthly['Premium %']=(df_monthly['Earnings (EUR)']/(df_monthly['Sales (EUR)']-df_monthly['Earnings (EUR)'])*100.)
+        df_monthly['Premium %']=(df_monthly['Earnings (EUR)']/(df_monthly['Total Sales (EUR)']-df_monthly['Earnings (EUR)'])*100.)
         df_monthly = df_monthly.fillna(0.)
         df_monthly['Premium %']=df_monthly['Premium %'].astype('int')
 
