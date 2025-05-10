@@ -452,6 +452,7 @@ def sell_perfume(request, id):
             transaction = get_object_or_404(PerfumeTransaction, id=id)
             transaction.sale_date = datetime.strptime(data['sale_date'], '%Y-%m-%d')
             transaction.sale_price = float(data['sale_price'])
+            transaction.sale_currency = data['sale_currency']
             transaction.sale_exch_rate = exch_rate
             transaction.sale_price_eur = float(data['sale_price']) / exch_rate
             transaction.earnings_eur=transaction.sale_price_eur-transaction.purchase_price_euro
