@@ -418,6 +418,13 @@ def update_perfume_edit(request, id):
 def get_perfume_data(request, id):
     try:
         transaction = get_object_or_404(PerfumeTransaction, id=id)
+        exchange = Tools.CurrencyExchange("EUR")
+        exch_rate_rub = exchange.get_rate('RUB')
+        exch_rate_aed = exchange.get_rate('AED')
+        target_premium=GlobalParameters.TARGET_PREMIUM
+        target_price_rub=round(transaction.price*exch_rate_rub*(1.+target_premium),-3)
+        target_price_aed=round(transaction.price*exch_rate_aed*(1.+target_premium),-1)
+
 
         data = {
             'perfumer': transaction.perfumer,
@@ -429,8 +436,8 @@ def get_perfume_data(request, id):
             'location': transaction.location,
             'package': transaction.package,
             'bottle': transaction.bottle,
-            'listed_price_ruble': transaction.listed_price_ruble,
-            'listed_price_aed': transaction.listed_price_aed,
+            'listed_price_ruble': target_price_rub,
+            'listed_price_aed': target_price_aed,
         }
 
 
