@@ -23,9 +23,6 @@ from django.contrib.auth.models import User
 from . import Tools
 
 
-
-
-
 def monthly_financial(request):
     # Get distinct year-months from all dates
     purchase_dates = PerfumeTransaction.objects.dates('purchase_date', 'month')
