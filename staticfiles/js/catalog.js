@@ -6,16 +6,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const perfumerSelect = document.getElementById('perfumerSelect');
     const fragranceSelect = document.getElementById('fragranceSelect');
     const locationSelect = document.getElementById('locationSelect');
-    if (!isStaff) {
-        locationSelect.value = userLocation;
-        locationSelect.disabled = true;
-    }
+
 
     function updateFilters() {
-        if (!isStaff) {
-            locationSelect.value = userLocation;
-            locationSelect.disabled = true;
-        }
+
 
         const selectedPerfumer = perfumerSelect.value;
         const selectedFragrance = fragranceSelect.value;
@@ -40,12 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const locations = [...new Set(filteredPerfumes.map(p => p.location))];
 
         // Update dropdowns and perfume list
-        console.time('intitialupdates');
+
         updateSelect(perfumerSelect, perfumers, selectedPerfumer);
         updateSelect(fragranceSelect, fragrances, selectedFragrance);
         updateSelect(locationSelect, locations, selectedLocation);
         updatePerfumeList(filteredPerfumes);
-        console.timeEnd('intitialupdates');
+
     }
 
     function updateFilters_old() {
@@ -160,8 +154,7 @@ function updatePerfumeList(perfumes) {
         const specsColumn = document.createElement('div');
         specsColumn.className = 'w-96 space-y-2';
         specsColumn.innerHTML = `
-            <p class="text-gray-600">Location: ${perfume.location}</p>
-            <p class="text-gray-600">Bottle: ${perfume.bottle}</p>
+            <p class="text-gray-600"> ${perfume.bottle}</p>
             <p class="text-gray-600">${perfume.package}</p>
 
         `;
@@ -297,25 +290,8 @@ function makeFieldEditable(element, perfumeId, fieldName) {
     }
 }
 
-function updateField(perfumeId, field, value, element) {
-    fetch('/update-perfume/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRFToken': getCookie('csrftoken')
-        },
-        body: JSON.stringify({
-            perfume_id: perfumeId,
-            field: field,
-            value: value
-        })
-    })
-    .then(response => response.json())
-    .then(data => {
-        element.textContent = value;
-        element.parentNode.replaceChild(element, element.parentNode.firstChild);
-    });
-}
+
+
 
 function scrollImages(container, direction) {
     const scrollAmount = 192; // width of image + padding
