@@ -19,6 +19,71 @@
 
     });
 
+    /**
+ * Exports the visible rows of the fragrance table to a CSV file.
+ * It ignores the last column ("Action") which contains the buttons.
+ * @param {string} filename - The name of the CSV file to be downloaded.
+ */
+    function exportTableToCSV(filename) {
+        const table = document.querySelector('.table-container table');
+        const rows = table.querySelectorAll('tr');
+        let csv = [];
+
+        // 1. Get the Header row (from thead)
+        const headerRow = table.querySelector('thead tr');
+        let header = [];
+        headerRow.querySelectorAll('th').forEach((th, index) => {
+            // Exclude the last header (Action)
+            if (index < headerRow.querySelectorAll('th').length - 1) {
+                header.push(`"${th.textContent.trim()}"`);
+            }
+        });
+        csv.push(header.join(','));
+
+        // 2. Get the Body rows (from tbody), only for VISIBLE rows
+        const bodyRows = table.querySelectorAll('#fragranceTable tr');
+        bodyRows.forEach(row => {
+            // Check if the row is visible (assuming your filter function sets display: none)
+            // If your filter function hides rows by other means, you may need a more robust check.
+            const isVisible = row.style.display !== 'none';
+
+            if (isVisible) {
+                let rowData = [];
+                row.querySelectorAll('td').forEach((td, index) => {
+                    // Exclude the last cell (Action)
+                    if (index < row.querySelectorAll('td').length - 1) {
+                        // Clean up text and wrap in quotes for proper CSV formatting
+                        let text = td.textContent.trim().replace(/"/g, '""');
+                        rowData.push(`"${text}"`);
+                    }
+                });
+                csv.push(rowData.join(','));
+            }
+        });
+
+        // 3. Create the CSV file content
+        const csvFile = csv.join('\n');
+
+        // 4. Download the file
+        const blob = new Blob([csvFile], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+
+        if (link.download !== undefined) {
+            // Browsers that support HTML5 download attribute
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", filename);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        } else {
+            // Fallback for older browsers (may not work reliably)
+            window.open('data:text/csv;charset=utf-8,' + encodeURIComponent(csvFile));
+        }
+    }
+
+
     // Get CSRF token from cookie
     function getCookie(name) {
         let cookieValue = null;

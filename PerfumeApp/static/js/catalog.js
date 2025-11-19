@@ -154,8 +154,7 @@ function updatePerfumeList(perfumes) {
         const specsColumn = document.createElement('div');
         specsColumn.className = 'w-96 space-y-2';
         specsColumn.innerHTML = `
-            <p class="text-gray-600">Location: ${perfume.location}</p>
-            <p class="text-gray-600">Bottle: ${perfume.bottle}</p>
+            <p class="text-gray-600"> ${perfume.bottle}</p>
             <p class="text-gray-600">${perfume.package}</p>
 
         `;
