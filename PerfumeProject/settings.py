@@ -74,7 +74,7 @@ WSGI_APPLICATION = 'PerfumeProject.wsgi.application'
 
 
 
-DATABASES = {
+DATABASES_OLD = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'perfumedbsmall',
@@ -85,7 +85,7 @@ DATABASES = {
         'PORT': '5432'
     }
 }
-DATABASES_OLD = {
+DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
