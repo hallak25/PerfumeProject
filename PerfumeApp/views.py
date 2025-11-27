@@ -358,24 +358,99 @@ def main(request):
   return HttpResponse(template.render())
 
 
+import pandas as pd
+from django.shortcuts import render
+from .models import PerfumeTransaction
+# from .utils import Transactions
+
 def all_time_financial_report(request):
-    # Create transaction DataFrame from database
-    df_transactions = pd.DataFrame.from_records(PerfumeTransaction.objects.all().values())
-    df_report=Transactions.all_time_report(df_transactions)
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
 
+    # 1. INITIAL QUERYSET AND DATE FILTERING
+    # This ensures only transactions within the exact date range are selected.
+    queryset = PerfumeTransaction.objects.all()
 
-    # Calculate column sums (for numeric columns)
+    if start_date and end_date:
+        # Transactions must have EITHER the purchase date OR the sale date
+        # strictly within the user-defined date range (YYYY-MM-DD).
+        combined_filter = (
+                Q(purchase_date__gte=start_date, purchase_date__lte=end_date) |
+                Q(sale_date__gte=start_date, sale_date__lte=end_date)
+        )
+        queryset = queryset.filter(combined_filter)
+
+    elif start_date:
+        # Handle case where only start_date is provided
+        combined_filter = (
+                Q(purchase_date__gte=start_date) |
+                Q(sale_date__gte=start_date)
+        )
+        queryset = queryset.filter(combined_filter)
+
+    elif end_date:
+        # Handle case where only end_date is provided
+        combined_filter = (
+                Q(purchase_date__lte=end_date) |
+                Q(sale_date__lte=end_date)
+        )
+        queryset = queryset.filter(combined_filter)
+
+    # 2. CREATE DATAFRAME AND GENERATE MONTHLY REPORT
+
+    data = list(queryset.values())
+    df_transactions = pd.DataFrame.from_records(data)
+
+    if df_transactions.empty:
+        context = {
+            'columns': [],
+            'data': [],
+            'sums': {},
+            'start_date': start_date,
+            'end_date': end_date
+        }
+        return render(request, 'financial_report.html', context)
+
+    # df_report aggregates the filtered transactions and groups them by month.
+    df_report = Transactions.all_time_report(df_transactions)
+
+    # 3. FINAL VISUAL FILTER (Ensures only relevant MONTH ROWS are shown)
+    # This prevents grouping anomalies (e.g., seeing all of December if the range ends Jan 1).
+    if start_date and end_date:
+        # Convert user's full dates to YYYY-MM strings for month-level row comparison.
+        start_month_str = datetime.strptime(start_date, '%Y-%m-%d').strftime('%Y-%m')
+        end_month_str = datetime.strptime(end_date, '%Y-%m-%d').strftime('%Y-%m')
+
+        # Filter rows where the 'month' column is within the calendar month range.
+        df_report = df_report[
+            (df_report['month'].astype(str) >= start_month_str) &
+            (df_report['month'].astype(str) <= end_month_str)
+            ]
+
+    # Handle case where the report is empty after final month filter
+    if df_report.empty:
+        context = {
+            'columns': df_report.columns.tolist(),
+            'data': [],
+            'sums': {},
+            'start_date': start_date,
+            'end_date': end_date
+        }
+        return render(request, 'financial_report.html', context)
+
+    # 4. RECALCULATE SUMS AND RENDER
     sums = {
         col: df_report[col].sum()
         for col in df_report.columns
-        if (pd.api.types.is_numeric_dtype(df_report[col]) and col!='Premium %')
+        if (pd.api.types.is_numeric_dtype(df_report[col]) and col != 'Premium %')
     }
 
-    # Convert DataFrame to dictionary for template
     context = {
         'columns': df_report.columns.tolist(),
         'data': df_report.to_dict('records'),
-        'sums': sums
+        'sums': sums,
+        'start_date': start_date,
+        'end_date': end_date,
     }
 
     return render(request, 'financial_report.html', context)
