@@ -79,11 +79,11 @@
             <table class="table table-striped">
                 <thead>
                     <tr>
-                        <th>Perfumer</th>
+                        <th onclick="sortTable(0)">Perfumer ⇅</th>
                         <th>Fragrance</th>
                         <th>Bottle</th>
                         <th>Description</th>
-                        <th>Purchase Date</th>
+                        <th onclick="sortTable(4)">Purchase Date ⇅</th>
                         <th>Purchase Price</th>
                         <th>Currency</th>
                         <th>Purchase Price (EUR)</th>
@@ -94,7 +94,9 @@
                 </thead>
                 <tbody id="fragranceTable">
                     {% for item in transactions %}
-                    <tr data-perfumer="{{ item.perfumer }}" data-fragrance="{{ item.fragrance }}" data-location="{{ item.location }}" data-purchase_price_euro="{{ item.purchase_price_euro }}">
+                    <tr data-perfumer="{{ item.perfumer }}" data-fragrance="{{ item.fragrance }}"
+                        data-location="{{ item.location }}" data-purchase_price_euro="{{ item.purchase_price_euro }}"
+                        data-purchase_date="{{ item.purchase_date|date:'Y-m-d' }}">
                         <td>{{ item.perfumer }}</td>
                         <td>{{ item.fragrance }}</td>
                         <td>{{ item.bottle }}</td>
