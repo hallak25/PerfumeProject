@@ -494,8 +494,8 @@ def get_perfume_data(request, id):
         exch_rate_rub = exchange.get_rate('RUB')
         exch_rate_aed = exchange.get_rate('AED')
         target_premium=GlobalParameters.TARGET_PREMIUM
-        target_price_rub=round(transaction.price*exch_rate_rub*(1.+target_premium),-3)
-        target_price_aed=round(transaction.price*exch_rate_aed*(1.+target_premium),-1)
+        target_price_rub=round(transaction.purchase_price_euro*exch_rate_rub*(1.+target_premium),-3)
+        target_price_aed=round(transaction.purchase_price_euro*exch_rate_aed*(1.+target_premium),-1)
 
 
         data = {
