@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<script>
+const isStaff = {{ request.user.is_staff|lower }};
+const userLocation = "{{ request.user.userprofile.location }}";
+let allPerfumes = [
+    {% for perfume in perfumes %}{
+        id: {{ perfume.id }},
+        perfumer: "{{ perfume.perfumer }}",
+        fragrance: "{{ perfume.fragrance }}",
+        location: "{{ perfume.location }}",
+        bottle: "{{ perfume.bottle }}",
+        package: "{{ perfume.package }}",
+        listed_price_ruble: "{{ perfume.listed_price_ruble }}",
+        listed_price_aed: "{{ perfume.listed_price_aed }}",
+        pictures: [{% for pic in perfume.perfumepicture_set.all %}"{{ pic.image.url }}"{% if not forloop.last %}, {% endif %}{% endfor %}]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-spray-can-sparkles me-2"></i>Luxury Fragrances
+            <small class="text-white-50 fst-italic ms-2 d-none d-lg-inline fw-light">Discover Rare &amp; Exclusive Scents</small>
+        </a>
+        <div class="ms-auto d-flex align-items-center gap-3">
+            {% if request.user.is_staff %}
+                <a href="{% url 'index' %}" class="text-warning text-decoration-none fw-semibold">Admin Panel</a>
+            {% endif %}
+            <span class="text-white"><i class="fas fa-user me-1"></i>{{ user.username }}</span>
+            <a href="{% url 'password_change' %}" class="text-warning text-decoration-none">Change Password</a>
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger btn-sm">Logout</button>
+            </form>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="filter-card">
+        <div class="filter-card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select id="perfumerSelect" class="form-select">
+                        <option value="">Select Perfumer</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="fragranceSelect" class="form-select">
+                        <option value="">Select Fragrance</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="locationSelect" class="form-select">
+                        <option value="">Select Location</option>
+                        <option value="Dubai" {% if not request.user.is_staff and request.user.userprofile.location == 'Dubai' %}selected{% endif %}>Dubai</option>
+                        <option value="Moscow" {% if not request.user.is_staff and request.user.userprofile.location == 'Moscow' %}selected{% endif %}>Moscow</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="perfumeList"></div>
+</div>
+<script src="{% static 'js/catalog.js' %}"></script>
+<script>updatePerfumeList(allPerfumes);</script>
+{% endblock %}

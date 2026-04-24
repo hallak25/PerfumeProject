@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extrahead %}
+<script>
+const isStaff = false;
+const userLocation = "Moscow";
+let allPerfumes = [
+    {% for perfume in perfumes %}{
+        id: {{ perfume.id }},
+        perfumer: "{{ perfume.perfumer }}",
+        fragrance: "{{ perfume.fragrance }}",
+        location: "{{ perfume.location }}",
+        bottle: "{{ perfume.bottle }}",
+        package: "{{ perfume.package }}",
+        listed_price_ruble: "{{ perfume.listed_price_ruble }}",
+        listed_price_aed: "{{ perfume.listed_price_aed }}",
+        pictures: [{% for pic in perfume.perfumepicture_set.all %}"{{ pic.image.url }}"{% if not forloop.last %}, {% endif %}{% endfor %}]
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+</script>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-spray-can-sparkles me-2"></i>Luxury Fragrances
+            <small class="text-white-50 fst-italic ms-2 d-none d-lg-inline fw-light">Discover Rare &amp; Exclusive Scents</small>
+        </a>
+        <div class="ms-auto">
+            <a href="{% url 'main_ru' %}" class="btn btn-outline-light btn-sm">Home</a>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="filter-card">
+        <div class="filter-card-body">
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <select id="perfumerSelect" class="form-select">
+                        <option value="">Select Perfumer</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="fragranceSelect" class="form-select">
+                        <option value="">Select Fragrance</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <select id="locationSelect" class="form-select" disabled>
+                        <option value="Moscow">Moscow</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="perfumeList"></div>
+</div>
+<script src="{% static 'js/catalog.js' %}"></script>
+<script>updatePerfumeList(allPerfumes);</script>
+{% endblock %}

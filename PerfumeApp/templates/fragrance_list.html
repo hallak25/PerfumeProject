@@ -1,0 +1,88 @@
+{% extends 'base_index.html' %}
+
+{% block title %}Fragrance Database{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+    <div class="row g-4">
+
+        <!-- Add form -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header">
+                    <h5 class="mb-0 text-white"><i class="fas fa-plus me-2"></i>Add Fragrance</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label">Perfumer</label>
+                            <input type="text" name="perfumer" class="form-control" placeholder="e.g. Chanel" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fragrance</label>
+                            <input type="text" name="fragrance" class="form-control" placeholder="e.g. No. 5" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Add
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fragrance list -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 text-white"><i class="fas fa-list me-2"></i>Fragrance Database</h5>
+                    <span class="badge bg-light text-dark">{{ fragrances|length }} entries</span>
+                </div>
+                <div class="card-body">
+                    <form method="get" class="mb-3">
+                        <div class="input-group">
+                            <input type="text" name="perfumer" class="form-control"
+                                   placeholder="Filter by perfumer..." value="{{ perfumer_filter }}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-search"></i>
+                            </button>
+                            {% if perfumer_filter %}
+                            <a href="{% url 'fragrance_list' %}" class="btn btn-secondary">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+
+                    <div class="table-container">
+                        <table class="table custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Perfumer</th>
+                                    <th>Fragrance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in fragrances %}
+                                <tr>
+                                    <td>{{ item.perfumer }}</td>
+                                    <td>{{ item.fragrance }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="2" class="empty-message">
+                                        <i class="fas fa-search me-2"></i>No fragrances found
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

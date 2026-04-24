@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <title>Login - Perfume Catalog</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gradient-to-r from-purple-500 to-pink-500">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-96">
+            <h2 class="text-2xl font-bold mb-6 text-center">Login</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="space-y-4">
+                    <input type="text" name="username" placeholder="Username" 
+                           class="w-full p-2 border rounded mb-3">
+                    <input type="password" name="password" placeholder="Password" 
+                           class="w-full p-2 border rounded mb-3">
+                    <button type="submit" 
+                            class="w-full bg-purple-600 text-white p-2 rounded-lg hover:bg-purple-700">
+                        Login
+                    </button>
+                </div>
+            </form>
+            <a href="{% url 'register' %}" class="block text-center mt-4 text-purple-600 hover:text-purple-700">
+            Create New Account
+            </a>
+        </div>
+    </div>
+</body>
+</html>

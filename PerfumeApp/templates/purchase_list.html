@@ -1,0 +1,144 @@
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+<!-- Header -->
+<header class="page-header">
+    <div class="container">
+        <h1 class="page-title">Purchase List</h1>
+        <p class="text-white-50 mb-0">Manage and explore your inventory</p>
+    </div>
+</header>
+
+<div class="container">
+    <!-- Filter Form -->
+    <div class="filter-card">
+        <div class="filter-card-header">
+            <h4 class="filter-card-title"><i class="fas fa-filter me-2"></i>Filter Purchases</h4>
+        </div>
+        <div class="filter-card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-4">
+                    <label for="perfumer" class="form-label"><i class="fas fa-user-tie me-2"></i>Perfumer</label>
+                    <select name="perfumer" id="perfumer" class="form-select">
+                        <option value="">All Perfumers</option>
+                        {% for perfumer in all_perfumers %}
+                            <option value="{{ perfumer }}" {% if perfumer == perfumer_filter %}selected{% endif %}>
+                                {{ perfumer }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="fragrance" class="form-label"><i class="fas fa-spray-can me-2"></i>Fragrance</label>
+                    <select name="fragrance" id="fragrance" class="form-select">
+                        <option value="">All Fragrances</option>
+                        {% for fragrance in all_fragrances %}
+                            <option value="{{ fragrance }}" {% if fragrance == fragrance_filter %}selected{% endif %}>
+                                {{ fragrance }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="location" class="form-label"><i class="fas fa-map-marker-alt me-2"></i>Location</label>
+                    <select name="location" id="location" class="form-select">
+                        <option value="">All Locations</option>
+                        {% for location in all_locations %}
+                            <option value="{{ location }}" {% if location == location_filter %}selected{% endif %}>
+                                {{ location }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="fas fa-search me-2"></i>Apply Filters
+                    </button>
+                    <a href="{% url 'purchase_list' %}" class="btn btn-secondary">
+                        <i class="fas fa-undo me-2"></i>Reset
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Active Filters -->
+    {% if perfumer_filter or fragrance_filter or location_filter %}
+    <div class="mb-4">
+        <h5 class="mb-3">Active Filters:</h5>
+        <div class="d-flex flex-wrap gap-2">
+            {% if perfumer_filter %}
+            <div class="badge bg-primary p-2">
+                Perfumer: {{ perfumer_filter }}
+                <a href="?{% if fragrance_filter %}fragrance={{ fragrance_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}" class="text-white ms-2">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if fragrance_filter %}
+            <div class="badge bg-primary p-2">
+                Fragrance: {{ fragrance_filter }}
+                <a href="?{% if perfumer_filter %}perfumer={{ perfumer_filter }}{% endif %}{% if location_filter %}&location={{ location_filter }}{% endif %}" class="text-white ms-2">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            {% endif %}
+
+            {% if location_filter %}
+            <div class="badge bg-primary p-2">
+                Location: {{ location_filter }}
+                <a href="?{% if perfumer_filter %}perfumer={{ perfumer_filter }}{% endif %}{% if fragrance_filter %}&fragrance={{ fragrance_filter }}{% endif %}" class="text-white ms-2">
+                    <i class="fas fa-times"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Fragrances Table -->
+    <div class="table-container">
+        <table class="table custom-table">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user-tie me-2"></i>Perfumer</th>
+                    <th><i class="fas fa-spray-can me-2"></i>Fragrance</th>
+                    <th><i class="far fa-calendar-alt me-2"></i>Purchase Date</th>
+                    <th><i class="fas fa-globe me-2"></i>Origin</th>
+                    <th><i class="fas fa-map-marker-alt me-2"></i>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in purchases %}
+                <tr>
+                    <td>{{ item.perfumer }}</td>
+                    <td>{{ item.fragrance }}</td>
+                    <td>{{ item.purchase_date|date:"F j, Y" }}</td>
+                    <td><span class="badge-origin">{{ item.origin }}</span></td>
+                    <td><span class="badge-location">{{ item.location }}</span></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="empty-message">
+                        <i class="fas fa-search me-2"></i>No purchases found matching your criteria
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <p class="counter-text">
+        <i class="fas fa-list me-2"></i>Showing {{ purchases|length }} purchases
+        {% if purchases|length > 0 and purchases|length < purchases.model.objects.count %}
+         out of {{ purchases.model.objects.count }} total
+        {% endif %}
+    </p>
+</div>
+{% endblock %}
