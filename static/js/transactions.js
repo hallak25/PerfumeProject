@@ -42,11 +42,9 @@ document.addEventListener('DOMContentLoaded', function() {
     function updatePurchasesList(purchases) {
         const purchasesList = document.getElementById('purchases-list');
         const purchasesSummary = document.getElementById('purchases-summary');
-         // Sort purchases by date
         purchases.sort((a, b) => new Date(a.purchase_date) - new Date(b.purchase_date));
 
-        let html = createTablePurchases(purchases);
-        purchasesList.innerHTML = html;
+        purchasesList.innerHTML = createTablePurchases(purchases);
 
         const total = purchases.reduce((sum, p) => sum + parseFloat(p.purchase_price_euro), 0);
         purchasesSummary.innerHTML = `Total: ${purchases.length} purchases, ${formatNumber(total)} EUR`;
@@ -56,16 +54,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const salesList = document.getElementById('sales-list');
         const salesSummary = document.getElementById('sales-summary');
 
-        // Sort sales by purchase date
         sales.sort((a, b) => new Date(a.purchase_date) - new Date(b.purchase_date));
 
-        let html = createTableSales(sales);
-        salesList.innerHTML = html;
+        salesList.innerHTML = createTableSales(sales);
 
         const total = sales.reduce((sum, s) => sum + parseFloat(s.sale_price_eur), 0);
         const total_purchase_price = sales.reduce((sum, s) => sum + parseFloat(s.purchase_price_euro), 0);
         const total_earnings = sales.reduce((sum, s) => sum + parseFloat(s.earnings_eur), 0);
-        const avg_premium = total_earnings/total_purchase_price*100.
+        const avg_premium = total_earnings / total_purchase_price * 100;
         salesSummary.innerHTML = `Total: ${sales.length} sales, ${formatNumber(total)} EUR, Earnings: ${formatNumber(total_earnings)} EUR.  Avg Premium: ${avg_premium.toFixed(0)} % `;
     }
 
@@ -75,17 +71,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         purchases.sort((a, b) => new Date(a.purchase_date) - new Date(b.purchase_date));
 
-        // Filter unsold items
         const inventoryItems = purchases.filter(p => p.sale_date === null);
 
-        let html = createTablePurchases(inventoryItems);
-        inventoryList.innerHTML = html;
+        inventoryList.innerHTML = createTablePurchases(inventoryItems, false);
 
         const total = inventoryItems.reduce((sum, p) => sum + parseFloat(p.purchase_price_euro), 0);
         inventorySummary.innerHTML = `Total: ${inventoryItems.length} perfumes, ${formatNumber(total)} EUR`;
     }
 
-    function createTablePurchases(transactions) {
+    function createTablePurchases(transactions, showDelete = true) {
         if (transactions.length === 0) return '<p>No transactions found</p>';
 
         return `
@@ -100,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th>Description</th>
                         <th>Purchase Price (EUR)</th>
                         <th>Location</th>
+                        ${showDelete ? '<th></th>' : ''}
                     </tr>
                 </thead>
                 <tbody>
@@ -113,6 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <td>${t.package}</td>
                             <td>${t.purchase_price_euro.toFixed(2)}</td>
                             <td>${t.location}</td>
+                            ${showDelete ? `<td><button class="btn-delete" onclick="deleteTransaction(${t.id}, '${escapeHtml(t.perfumer)} – ${escapeHtml(t.fragrance)}')">Delete</button></td>` : ''}
                         </tr>
                     `).join('')}
                 </tbody>
@@ -128,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <thead>
                     <tr>
                         <th>Purchase Date</th>
-                        <th>Sale Date</th>
+                        <th style="white-space: nowrap">Sale Date</th>
                         <th>Perfumer</th>
                         <th>Fragrance</th>
                         <th>Sale Price</th>
@@ -136,20 +132,22 @@ document.addEventListener('DOMContentLoaded', function() {
                         <th>Sale Price (EUR)</th>
                         <th>Earnings (EUR)</th>
                         <th>Premium (%)</th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
                     ${transactions.map(t => `
                         <tr>
                             <td>${formatDate(t.purchase_date)}</td>
-                            <td>${formatDate(t.sale_date)}</td>
+                            <td style="white-space: nowrap">${formatDate(t.sale_date)}</td>
                             <td>${t.perfumer}</td>
                             <td>${t.fragrance}</td>
                             <td>${formatNumber(t.sale_price)}</td>
                             <td>${t.sale_exch_rate.toFixed(1)}</td>
                             <td>${t.sale_price_eur.toFixed(2)}</td>
                             <td>${t.earnings_eur.toFixed(2)}</td>
-                            <td>${(t.premium*100.).toFixed(0)}</td>
+                            <td>${(t.premium * 100).toFixed(0)}</td>
+                            <td><button class="btn-reset-sale" onclick="resetSale(${t.id}, '${escapeHtml(t.perfumer)} – ${escapeHtml(t.fragrance)}')">Delete</button></td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -169,6 +167,42 @@ document.addEventListener('DOMContentLoaded', function() {
         return `${day}-${month}-${year}`;
     }
 
+    function escapeHtml(str) {
+        return String(str).replace(/'/g, "\\'");
+    }
+
     // Initial load
     updateLists();
 });
+
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
+function deleteTransaction(id, label) {
+    if (!confirm(`Permanently delete "${label}"?\n\nThis cannot be undone.`)) return;
+    fetch(`/delete-transaction/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') location.reload();
+        else alert('Delete failed.');
+    })
+    .catch(() => alert('Delete failed.'));
+}
+
+function resetSale(id, label) {
+    if (!confirm(`Reset sale fields for "${label}"?\n\nThe purchase record will be kept but all sale data will be cleared.`)) return;
+    fetch(`/reset-sale/${id}/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrfToken() }
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') location.reload();
+        else alert('Reset failed.');
+    })
+    .catch(() => alert('Reset failed.'));
+}

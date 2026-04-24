@@ -151,12 +151,20 @@ def get_fragrances_2(request):
     return JsonResponse(list(fragrances), safe=False)
 
 
+PERFUME_EDITABLE_FIELDS = {
+    'fragrance', 'perfumer', 'location', 'package', 'bottle', 'origin',
+    'listed_price_ruble', 'listed_price_aed',
+}
+
 @require_POST
 @staff_member_required
 def update_perfume(request):
     data = json.loads(request.body)
-    perfume = PerfumeTransaction.objects.get(id=data['perfume_id'])
-    setattr(perfume, data['field'], data['value'])
+    field = data.get('field')
+    if field not in PERFUME_EDITABLE_FIELDS:
+        return JsonResponse({'status': 'error', 'message': 'Field not editable'}, status=400)
+    perfume = get_object_or_404(PerfumeTransaction, id=data['perfume_id'])
+    setattr(perfume, field, data['value'])
     perfume.save()
     return JsonResponse({'status': 'success'})
 
@@ -279,6 +287,18 @@ def fragrance_list(request):
         'fragrances': fragrances,
         'perfumer_filter': perfumer_filter,
     })
+
+@staff_member_required
+def update_fragrance(request, pk):
+    if request.method == 'POST':
+        fragrance_obj = get_object_or_404(Fragrance, pk=pk)
+        perfumer = request.POST.get('perfumer', '').strip()
+        fragrance_name = request.POST.get('fragrance', '').strip()
+        if perfumer and fragrance_name:
+            fragrance_obj.perfumer = perfumer
+            fragrance_obj.fragrance = fragrance_name
+            fragrance_obj.save()
+    return redirect('fragrance_list')
 
 @staff_member_required
 def get_fragrances(request):
@@ -414,24 +434,45 @@ def inventory_list(request):
         'locations': locations,
     })
 
-@csrf_exempt
+@require_POST
+@staff_member_required
 def update_perfume_edit(request, id):
-    if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+        transaction = get_object_or_404(PerfumeTransaction, id=id)
+        transaction.fragrance = data['fragrance']
+        transaction.location = data['location']
+        transaction.package = data['package']
+        transaction.bottle = data['bottle']
+        transaction.listed_price_ruble = data['listed_price_ruble']
+        transaction.listed_price_aed = data['listed_price_aed']
+        transaction.save()
+        return JsonResponse({'status': 'success'})
+    except Exception:
+        return JsonResponse({'status': 'error', 'message': 'Update failed'}, status=400)
 
-            transaction = get_object_or_404(PerfumeTransaction, id=id)
-            transaction.fragrance = data['fragrance']
-            transaction.location = data['location']
-            transaction.package = data['package']
-            transaction.bottle = data['bottle']
-            transaction.listed_price_ruble = data['listed_price_ruble']
-            transaction.listed_price_aed = data['listed_price_aed']
-            transaction.save()
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)})
+@require_POST
+@staff_member_required
+def delete_transaction(request, id):
+    transaction = get_object_or_404(PerfumeTransaction, id=id)
+    transaction.delete()
+    return JsonResponse({'status': 'success'})
 
+@require_POST
+@staff_member_required
+def reset_sale(request, id):
+    transaction = get_object_or_404(PerfumeTransaction, id=id)
+    transaction.sale_date = None
+    transaction.sale_price = None
+    transaction.sale_currency = None
+    transaction.sale_exch_rate = None
+    transaction.sale_price_eur = None
+    transaction.earnings_eur = None
+    transaction.premium = None
+    transaction.save()
+    return JsonResponse({'status': 'success'})
+
+@staff_member_required
 def get_perfume_data(request, id):
     try:
         transaction = get_object_or_404(PerfumeTransaction, id=id)

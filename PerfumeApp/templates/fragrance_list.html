@@ -61,17 +61,46 @@
                                 <tr>
                                     <th>Perfumer</th>
                                     <th>Fragrance</th>
+                                    <th style="width:100px;"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for item in fragrances %}
-                                <tr>
-                                    <td>{{ item.perfumer }}</td>
-                                    <td>{{ item.fragrance }}</td>
+                                <tr id="row-{{ item.id }}">
+                                    <!-- View mode -->
+                                    <td class="view-cell">{{ item.perfumer }}</td>
+                                    <td class="view-cell">{{ item.fragrance }}</td>
+                                    <td class="view-cell text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary"
+                                                onclick="startEdit({{ item.id }}, '{{ item.perfumer|escapejs }}', '{{ item.fragrance|escapejs }}')">
+                                            <i class="fas fa-pencil-alt"></i>
+                                        </button>
+                                    </td>
+
+                                    <!-- Edit mode (hidden by default) -->
+                                    <td class="edit-cell d-none">
+                                        <input type="text" class="form-control form-control-sm" id="edit-perfumer-{{ item.id }}" value="{{ item.perfumer }}">
+                                    </td>
+                                    <td class="edit-cell d-none">
+                                        <input type="text" class="form-control form-control-sm" id="edit-fragrance-{{ item.id }}" value="{{ item.fragrance }}">
+                                    </td>
+                                    <td class="edit-cell d-none text-end">
+                                        <form method="post" action="{% url 'update_fragrance' item.id %}" style="display:inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="perfumer" id="hidden-perfumer-{{ item.id }}">
+                                            <input type="hidden" name="fragrance" id="hidden-fragrance-{{ item.id }}">
+                                            <button type="submit" class="btn btn-sm btn-success me-1" onclick="prepareSubmit({{ item.id }})">
+                                                <i class="fas fa-check"></i>
+                                            </button>
+                                        </form>
+                                        <button type="button" class="btn btn-sm btn-secondary" onclick="cancelEdit({{ item.id }})">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="2" class="empty-message">
+                                    <td colspan="3" class="empty-message">
                                         <i class="fas fa-search me-2"></i>No fragrances found
                                     </td>
                                 </tr>
@@ -85,4 +114,24 @@
 
     </div>
 </div>
+
+<script>
+function startEdit(id, perfumer, fragrance) {
+    const row = document.getElementById('row-' + id);
+    row.querySelectorAll('.view-cell').forEach(el => el.classList.add('d-none'));
+    row.querySelectorAll('.edit-cell').forEach(el => el.classList.remove('d-none'));
+    document.getElementById('edit-perfumer-' + id).focus();
+}
+
+function cancelEdit(id) {
+    const row = document.getElementById('row-' + id);
+    row.querySelectorAll('.view-cell').forEach(el => el.classList.remove('d-none'));
+    row.querySelectorAll('.edit-cell').forEach(el => el.classList.add('d-none'));
+}
+
+function prepareSubmit(id) {
+    document.getElementById('hidden-perfumer-' + id).value = document.getElementById('edit-perfumer-' + id).value;
+    document.getElementById('hidden-fragrance-' + id).value = document.getElementById('edit-fragrance-' + id).value;
+}
+</script>
 {% endblock %}

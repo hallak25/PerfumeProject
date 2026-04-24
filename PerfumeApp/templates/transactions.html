@@ -3,6 +3,7 @@
 <html>
 <head>
     <title>Perfume Transactions</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -133,6 +134,35 @@
             border-top: 2px solid #eef2f7;
             font-weight: 600;
             color: var(--secondary-color);
+        }
+
+        .btn-delete, .btn-reset-sale {
+            border: none;
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .btn-delete {
+            background-color: #e74c3c;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-reset-sale {
+            background-color: #e67e22;
+            color: white;
+        }
+
+        .btn-reset-sale:hover {
+            background-color: #ca6f1e;
         }
 
         @media (max-width: 768px) {
