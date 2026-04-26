@@ -19,6 +19,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from . import Tools
+from django.core.cache import cache
 
 
 def monthly_financial(request):
@@ -264,9 +265,23 @@ def get_filtered_options(request):
          'perfumes' : perfumes_data,
     })
 
+def _get_live_rates():
+    rates = cache.get('live_exchange_rates')
+    if rates is None:
+        exchanger = Tools.CurrencyExchange("EUR")
+        exchanger.fetch_rates()
+        eur_rub = exchanger.get_rate("RUB")
+        eur_gbp = exchanger.get_rate("GBP")
+        rates = {
+            'eur_rub': round(eur_rub, 2) if eur_rub else None,
+            'gbp_eur': round(1 / eur_gbp, 4) if eur_gbp else None,
+        }
+        cache.set('live_exchange_rates', rates, 600)
+    return rates
+
 @staff_member_required
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'index.html', {'rates': _get_live_rates()})
 
 
 @staff_member_required

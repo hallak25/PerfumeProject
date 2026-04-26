@@ -3,6 +3,17 @@
 
 {% block title %}New Purchase{% endblock %}
 
+{% block navbar %}
+<div class="bg-primary bg-gradient py-3 mb-4">
+    <div class="container-fluid position-relative d-flex align-items-center justify-content-center">
+        <a href="{% url 'index' %}" class="btn btn-light btn-sm position-absolute start-0 ms-4">
+            <i class="fas fa-home me-1"></i>Home
+        </a>
+        <h4 class="fw-bold text-white mb-0"><i class="fas fa-shopping-bag me-2"></i>New Purchase</h4>
+    </div>
+</div>
+{% endblock %}
+
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">

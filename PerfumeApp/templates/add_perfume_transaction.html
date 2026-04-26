@@ -1,0 +1,174 @@
+{% extends 'base_add.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow">
+        <div class="card-header">
+            <h2>New Perfume Purchase</h2>
+        </div>
+
+        <div class="card-body">
+            <div id="success-message" class="alert alert-success d-none">
+                <span class="message-text"></span>
+            </div>
+            <div id="error-message" class="alert alert-danger d-none">
+                <span class="message-text"></span>
+            </div>
+
+            <form id="transaction-form" class="row g-3">
+                {% csrf_token %}
+
+                <div class="col-md-6">
+                    <label class="form-label">Perfumer</label>
+                    <select name="perfumer" class="form-select" required>
+                        <option value="">Select Perfumer</option>
+                        {% for perfumer in perfumers %}
+                            <option value="{{ perfumer }}">{{ perfumer }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Fragrance</label>
+                    <select name="fragrance" class="form-select" required>
+                        <option value="">Select Fragrance</option>
+                        {% for fragrance in fragrances %}
+                            <option value="{{ fragrance }}">{{ fragrance }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Package</label>
+                    <select name="package" class="form-select" required>
+                        <option value="">Select Package</option>
+                        {% for package in packages %}
+                            <option value="{{ package }}">{{ package }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Bottle</label>
+                    <select name="bottle" class="form-select" required>
+                        <option value="">Select Bottle</option>
+                        {% for bottle in bottles %}
+                            <option value="{{ bottle }}">{{ bottle }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Origin</label>
+                    <select name="origin" class="form-select" required>
+                        <option value="">Select Origin</option>
+                        {% for origin in origins %}
+                            <option value="{{ origin }}">{{ origin }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Location</label>
+                    <select name="location" class="form-select" required>
+                        <option value="">Select Location</option>
+                        {% for location in locations %}
+                            <option value="{{ location }}">{{ location }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Price</label>
+                    <input type="number" name="price" class="form-control" step="0.01" min="0" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Currency</label>
+                    <select name="currency" class="form-select" required>
+                        <option value="">Select Currency</option>
+                        {% for currency in currencies %}
+                            <option value="{{ currency }}">{{ currency }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" class="form-control" value="{{ today|date:'Y-m-d' }}" required>
+                </div>
+
+                <div class="col-12">
+                    <button type="submit" id="submit-btn" class="btn btn-primary">Add Purchase</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Utility to show/hide messages with a fade effect
+ */
+function showMessage(type, text) {
+    const messageElement = document.getElementById(`${type}-message`);
+    const textSpan = messageElement.querySelector('.message-text');
+
+    textSpan.textContent = text;
+    messageElement.classList.remove('d-none');
+    messageElement.style.opacity = '1';
+
+    setTimeout(() => {
+        messageElement.style.transition = 'opacity 0.5s ease';
+        messageElement.style.opacity = '0';
+        setTimeout(() => {
+            messageElement.classList.add('d-none');
+            messageElement.style.opacity = '1'; // Reset for next use
+        }, 500);
+    }, 4000);
+}
+
+document.getElementById('transaction-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const submitBtn = document.getElementById('submit-btn');
+    const formData = new FormData(this);
+
+    // Disable button to prevent double-submissions
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Saving...';
+
+    fetch('{% url "add_transaction" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Server error');
+        return response.json();
+    })
+    .then(data => {
+        if (data.status === 'success') {
+            showMessage('success', data.message || 'Transaction saved successfully!');
+            this.reset();
+            // Ensure the date resets to today instead of being empty
+            document.querySelector('input[name="date"]').value = '{{ today|date:"Y-m-d" }}';
+        } else {
+            showMessage('error', data.message || 'There was an issue saving the transaction.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showMessage('error', 'Failed to connect to the server. Please try again.');
+    })
+    .finally(() => {
+        // Re-enable button
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Purchase';
+    });
+});
+</script>
+{% endblock %}

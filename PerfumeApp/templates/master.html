@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html>
   <link rel="stylesheet" href="{% static 'Perfume.css' %}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
   <style type="text/css">
   .centerImg
   {
@@ -15,7 +16,9 @@
   <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-
+<div style="padding:10px;">
+    <a href="{% url 'index' %}" style="background:#0d6efd; color:#fff; padding:5px 14px; border-radius:4px; text-decoration:none; font-size:0.875rem;"><i class="fas fa-home me-1"></i>Home</a>
+</div>
 {% block content %}
 {% endblock %}
 

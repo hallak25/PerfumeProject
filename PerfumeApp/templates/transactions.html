@@ -5,6 +5,7 @@
     <title>Perfume Transactions</title>
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
     <style>
         :root {
             --primary-color: #2c3e50;
@@ -177,7 +178,8 @@
     </style>
 </head>
 <body>
-    <div class="filters-section">
+    <div class="filters-section" style="position:relative;">
+        <a href="{% url 'index' %}" style="position:absolute; top:50%; transform:translateY(-50%); left:20px; background:#fff; color:#333; padding:5px 14px; border:1px solid #ccc; border-radius:4px; text-decoration:none; font-size:0.875rem;"><i class="fas fa-home me-1"></i>Home</a>
         <div class="filters">
             <select id="perfumer">
                 <option value="">Select Perfumer</option>

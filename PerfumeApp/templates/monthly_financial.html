@@ -4,6 +4,7 @@
 <head>
     <title>Monthly Financial Report</title>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.3.0/css/all.min.css">
     <style>
         body {
             font-family: 'Montserrat', sans-serif;
@@ -89,7 +90,8 @@
 <body>
     <div class="container-fluid mt-4">
 
-<div class="filters d-flex justify-content-center align-items-center">
+<div class="filters" style="position:relative; display:flex; justify-content:center; align-items:center;">
+    <a href="{% url 'index' %}" style="position:absolute; left:16px; background:#fff; color:#333; padding:5px 14px; border:1px solid #ccc; border-radius:4px; text-decoration:none; font-size:0.875rem;"><i class="fas fa-home me-1"></i>Home</a>
     <select id="yearMonth" style="width: 200px;" class="form-select">
         <option value="">Select Month</option>
         {% for ym in year_months %}
