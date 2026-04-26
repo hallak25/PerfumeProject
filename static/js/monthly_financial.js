@@ -175,16 +175,16 @@
           updateLists()
           const selectedDate = new Date(document.getElementById('yearMonth').value + '-01');
           const formattedMonth = selectedDate.toLocaleString('en-GB', { month: 'long', year: '2-digit' });
-          document.querySelector('.list:nth-child(2) h2').textContent = `${formattedMonth} - Purchases`;
-          document.querySelector('.list:nth-child(3) h2').textContent = `${formattedMonth} - Sales`;
+          document.querySelectorAll('.list')[0].querySelector('h2').textContent = `${formattedMonth} - Purchases`;
+          document.querySelectorAll('.list')[1].querySelector('h2').textContent = `${formattedMonth} - Sales`;
            });
 
           document.getElementById('yearMonth').addEventListener('change', function() {
                 const selectedDate = new Date(this.value + '-01');
                 const formattedMonth = selectedDate.toLocaleString('en-GB', { month: 'long', year: '2-digit' });
 
-                document.querySelector('.list:nth-child(2) h2').textContent = `${formattedMonth} - Purchases`;
-                document.querySelector('.list:nth-child(3) h2').textContent = `${formattedMonth} - Sales`;
+                document.querySelectorAll('.list')[0].querySelector('h2').textContent = `${formattedMonth} - Purchases`;
+                document.querySelectorAll('.list')[1].querySelector('h2').textContent = `${formattedMonth} - Sales`;
                 updateLists()
             });
 

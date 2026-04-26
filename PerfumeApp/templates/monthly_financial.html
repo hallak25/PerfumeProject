@@ -9,7 +9,7 @@
         body {
             font-family: 'Montserrat', sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 0;
             background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
             min-height: 100vh;
         }
@@ -17,14 +17,16 @@
             max-width: 95%;
             margin: 0 auto;
         }
-        .filters {
-
+        .banner {
             background: #0d6efd;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            text-align: center;
+            padding: 14px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 24px;
         }
 
         select {
@@ -37,16 +39,22 @@
         }
         .list {
             background: white;
-            padding: 20px;
+            padding: 0;
             border-radius: 10px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             margin-bottom: 20px;
+            overflow: hidden;
         }
         .list h2 {
-            color: #333;
-            margin-top: 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f0f0f0;
+            background-color: #0d6efd;
+            color: white;
+            margin: 0;
+            padding: 14px 20px;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        .list > div {
+            padding: 15px 20px;
         }
         table {
             width: 100%;
@@ -88,17 +96,19 @@
     </style>
 </head>
 <body>
-    <div class="container-fluid mt-4">
-
-<div class="filters" style="position:relative; display:flex; justify-content:center; align-items:center;">
-    <a href="{% url 'index' %}" style="position:absolute; left:16px; background:#fff; color:#333; padding:5px 14px; border:1px solid #ccc; border-radius:4px; text-decoration:none; font-size:0.875rem;"><i class="fas fa-home me-1"></i>Home</a>
-    <select id="yearMonth" style="width: 200px;" class="form-select">
-        <option value="">Select Month</option>
-        {% for ym in year_months %}
-            <option value="{{ ym }}">{{ ym }}</option>
-        {% endfor %}
-    </select>
-</div>
+    <div class="banner">
+        <a href="{% url 'index' %}" style="position:absolute; left:16px; background:#fff; color:#333; padding:5px 14px; border:1px solid #ccc; border-radius:4px; text-decoration:none; font-size:0.875rem;"><i class="fas fa-home" style="margin-right:4px;"></i>Home</a>
+        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+            <span style="color:#fff; font-weight:600; font-size:1.1rem; letter-spacing:0.02em;"><i class="fas fa-calendar-alt" style="margin-right:6px;"></i>Monthly Report</span>
+            <select id="yearMonth" style="width:200px; padding:6px 10px; border:1px solid #ddd; border-radius:5px; font-size:14px; background:white;">
+                <option value="">Select Month</option>
+                {% for ym in year_months %}
+                    <option value="{{ ym }}">{{ ym }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <div class="container-fluid" style="padding: 0 20px;">
 
         <div class="list">
             <h2>Monthly Purchases</h2>
