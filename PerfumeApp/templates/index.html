@@ -33,16 +33,6 @@
     <div class="row g-3 mb-3">
         <div class="col-md-4">
             <div class="card shadow-sm card-hover">
-                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="All Time Report"
-                     style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
-                <div class="card-body d-flex flex-column">
-                    <h5 class="card-title"><i class="fas fa-chart-line me-2 text-primary"></i>Financial Report</h5>
-                    <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm mt-auto py-2">All Time</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card shadow-sm card-hover">
                 <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Monthly Report"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
                 <div class="card-body d-flex flex-column">
@@ -53,6 +43,29 @@
         </div>
         <div class="col-md-4">
             <div class="card shadow-sm card-hover">
+                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Sales Review"
+                     style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title"><i class="fas fa-chart-pie me-2 text-primary"></i>Sales Review</h5>
+                    <a href="{% url 'sales_review' %}" class="btn btn-primary btn-sm mt-auto py-2">Analyze Sales</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm card-hover">
+                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="All Time Report"
+                     style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title"><i class="fas fa-chart-line me-2 text-primary"></i>Financial Report</h5>
+                    <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm mt-auto py-2">All Time</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div class="card shadow-sm card-hover">
                 <img src="{% static 'images/purchase.jpg' %}" class="card-img-top" alt="Purchases"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
                 <div class="card-body d-flex flex-column">
@@ -61,10 +74,7 @@
                 </div>
             </div>
         </div>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm card-hover">
                 <img src="{% static 'images/perfume_stock.jpg' %}" class="card-img-top" alt="Inventory"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
@@ -74,7 +84,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm card-hover">
                 <img src="{% static 'images/transactions.jpg' %}" class="card-img-top" alt="Transactions"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
@@ -84,7 +94,7 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="card shadow-sm card-hover">
                 <img src="{% static 'images/fragrance_shop.jpg' %}" class="card-img-top" alt="Fragrances"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">

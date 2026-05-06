@@ -1,0 +1,284 @@
+{% extends 'base_index.html' %}
+{% load static %}
+{% load custom_filters %}
+
+{% block title %}Sales Review{% endblock %}
+
+{% block navbar %}
+<div class="bg-primary bg-gradient py-3 mb-4">
+    <div class="container-fluid position-relative d-flex align-items-center justify-content-center">
+        <a href="{% url 'index' %}" class="btn btn-light btn-sm position-absolute start-0 ms-4">
+            <i class="fas fa-home me-1"></i>Home
+        </a>
+        <h4 class="fw-bold text-white mb-0"><i class="fas fa-chart-pie me-2"></i>Sales Review</h4>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container pb-4">
+
+    <form method="get" class="row g-2 align-items-end mb-4 justify-content-center">
+        <div class="col-auto">
+            <label class="form-label fw-bold mb-1">Year:</label>
+            <select name="year" class="form-select" style="min-width:120px;" onchange="this.form.submit()">
+                {% for y in available_years %}
+                    <option value="{{ y }}" {% if y == selected_year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    {% if no_data %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle me-2"></i>No sales data available{% if selected_year %} for {{ selected_year }}{% endif %}.
+        </div>
+    {% else %}
+
+        <!-- KPI cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase">Units Sold</small>
+                        <h3 class="mb-0">{{ units_sold }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase">Revenue</small>
+                        <h3 class="mb-0">€{{ total_revenue|format_number }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase">Profit</small>
+                        <h3 class="mb-0 text-success">€{{ total_profit|format_number }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm h-100">
+                    <div class="card-body">
+                        <small class="text-muted text-uppercase">Avg Margin</small>
+                        <h3 class="mb-0">{{ avg_margin|floatformat:1 }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100 border-success">
+                    <div class="card-header bg-success text-white">
+                        <i class="fas fa-trophy me-2"></i>Recommended Perfumer to Focus On
+                    </div>
+                    <div class="card-body">
+                        <h4 class="mb-2">{{ recommended_brand.perfumer }}</h4>
+                        <p class="mb-1"><strong>€{{ recommended_brand.profit|format_number }}</strong> profit ({{ recommended_brand.profit_share }}% of total)</p>
+                        <p class="mb-1">€{{ recommended_brand.revenue|format_number }} revenue · {{ recommended_brand.units }} units sold</p>
+                        <p class="mb-3">Average margin: {{ recommended_brand.avg_margin|floatformat:1 }}%</p>
+                        <small class="text-muted">
+                            This perfumer generated the highest total profit in {{ selected_year }}.
+                            Consider increasing inventory and marketing spend on it.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100 border-primary">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-bullseye me-2"></i>Optimal Margin Target
+                    </div>
+                    <div class="card-body">
+                        <h4 class="mb-2">{{ optimal_segment }}</h4>
+                        <p class="mb-1"><strong>€{{ optimal_segment_profit|format_number }}</strong> total profit in this band</p>
+                        <p class="mb-3">{{ optimal_segment_units }} units sold at this margin</p>
+                        <small class="text-muted">
+                            Items priced in this margin range produced the highest aggregate profit
+                            in {{ selected_year }}. Use this as a pricing target — higher margins
+                            usually mean fewer sales, lower margins mean less profit per unit.
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perfumer rankings -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-coins me-2"></i>Top Perfumers by Profit</h5>
+                    </div>
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Perfumer</th>
+                                <th class="text-end">Profit (€)</th>
+                                <th class="text-end">Units</th>
+                                <th class="text-end">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="perfumer-rows">
+                            {% for b in top_by_profit %}
+                            <tr data-perfumer="{{ b.perfumer }}" style="cursor:pointer;"
+                                {% if b.perfumer == recommended_brand.perfumer %}class="table-active"{% endif %}>
+                                <td>{{ b.perfumer }}</td>
+                                <td class="text-end">{{ b.profit|format_number }}</td>
+                                <td class="text-end">{{ b.units }}</td>
+                                <td class="text-end">{{ b.avg_margin|floatformat:1 }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card shadow-sm h-100">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-spray-can me-2"></i>
+                            <span id="fragrance-card-perfumer">{{ recommended_brand.perfumer }}</span>
+                            &mdash; Fragrances by Profit
+                        </h5>
+                    </div>
+                    <table class="table mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fragrance</th>
+                                <th class="text-end">Profit (€)</th>
+                                <th class="text-end">Units</th>
+                                <th class="text-end">Margin</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fragrance-rows"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{ fragrances_by_perfumer|json_script:"fragrances-data" }}
+        <script>
+            const fragrancesByPerfumer = JSON.parse(document.getElementById('fragrances-data').textContent);
+
+            function renderFragrances(perfumerName) {
+                document.getElementById('fragrance-card-perfumer').textContent = perfumerName;
+                const tbody = document.getElementById('fragrance-rows');
+                const rows = fragrancesByPerfumer[perfumerName] || [];
+                tbody.innerHTML = rows.map(r => `
+                    <tr>
+                        <td>${r.fragrance}</td>
+                        <td class="text-end">${Math.round(r.profit).toLocaleString('en-US')}</td>
+                        <td class="text-end">${r.units}</td>
+                        <td class="text-end">${r.avg_margin.toFixed(1)}%</td>
+                    </tr>
+                `).join('');
+            }
+
+            document.querySelectorAll('#perfumer-rows tr[data-perfumer]').forEach(row => {
+                row.addEventListener('click', () => {
+                    document.querySelectorAll('#perfumer-rows tr').forEach(r => r.classList.remove('table-active'));
+                    row.classList.add('table-active');
+                    renderFragrances(row.dataset.perfumer);
+                });
+            });
+
+            // initial render
+            renderFragrances("{{ recommended_brand.perfumer|escapejs }}");
+        </script>
+
+        <!-- Margin profit chart -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Profit by Margin Segment</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="marginChart" height="80"></canvas>
+                <small class="text-muted d-block mt-2">
+                    Green bar = optimal segment (highest total profit). The shape of this chart
+                    reveals where your customers are most willing to pay a premium.
+                </small>
+            </div>
+        </div>
+
+        <!-- Margin distribution table -->
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-table me-2"></i>Margin Distribution</h5>
+            </div>
+            <table class="table mb-0">
+                <thead>
+                    <tr>
+                        <th>Margin Range</th>
+                        <th class="text-end">Units</th>
+                        <th class="text-end">Revenue (€)</th>
+                        <th class="text-end">Profit (€)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in margin_records %}
+                    <tr {% if row.segment == optimal_segment %}class="table-success"{% endif %}>
+                        <td>
+                            {{ row.segment }}
+                            {% if row.segment == optimal_segment %}<i class="fas fa-bullseye text-success ms-1"></i>{% endif %}
+                        </td>
+                        <td class="text-end">{{ row.units }}</td>
+                        <td class="text-end">{{ row.revenue|format_number }}</td>
+                        <td class="text-end">{{ row.profit|format_number }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {{ chart_segments|json_script:"chart-segments" }}
+        {{ chart_profits|json_script:"chart-profits" }}
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            const segments = JSON.parse(document.getElementById('chart-segments').textContent);
+            const profits = JSON.parse(document.getElementById('chart-profits').textContent);
+            const optimalSegment = "{{ optimal_segment|escapejs }}";
+
+            const colors = segments.map(s => s === optimalSegment ? '#198754' : '#6a11cb');
+
+            new Chart(document.getElementById('marginChart'), {
+                type: 'bar',
+                data: {
+                    labels: segments,
+                    datasets: [{
+                        label: 'Profit (€)',
+                        data: profits,
+                        backgroundColor: colors,
+                        borderWidth: 0,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: ctx => 'Profit: €' + Math.round(ctx.parsed.y).toLocaleString('en-US')
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'Profit (€)' } },
+                        x: { title: { display: true, text: 'Margin segment' } }
+                    }
+                }
+            });
+        </script>
+
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block footer %}{% endblock %}

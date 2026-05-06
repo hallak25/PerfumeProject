@@ -424,6 +424,11 @@ def all_time_financial_report(request):
         for col in df_report.columns
         if (pd.api.types.is_numeric_dtype(df_report[col]) and col != 'Premium %')
     }
+    total_sales = sums.get('Total Sales (EUR)', 0)
+    total_earnings = sums.get('Earnings (EUR)', 0)
+    cost = total_sales - total_earnings
+    if cost:
+        sums['Premium %'] = int(round(total_earnings / cost * 100))
 
     context = {
         'columns': df_report.columns.tolist(),
@@ -434,6 +439,144 @@ def all_time_financial_report(request):
     }
 
     return render(request, 'financial_report.html', context)
+
+
+@staff_member_required
+def sales_review(request):
+    sold_qs = PerfumeTransaction.objects.exclude(sale_date__isnull=True)
+
+    available_years = sorted(
+        {d.year for d in sold_qs.dates('sale_date', 'year')},
+        reverse=True,
+    )
+
+    if not available_years:
+        return render(request, 'sales_review.html', {
+            'available_years': [],
+            'no_data': True,
+        })
+
+    selected_year = int(request.GET.get('year', available_years[0]))
+
+    year_qs = sold_qs.filter(sale_date__year=selected_year)
+
+    if not year_qs.exists():
+        return render(request, 'sales_review.html', {
+            'available_years': available_years,
+            'selected_year': selected_year,
+            'no_data': True,
+        })
+
+    df = pd.DataFrame.from_records(year_qs.values(
+        'perfumer', 'fragrance', 'purchase_price_euro',
+        'sale_price_eur', 'earnings_eur',
+    ))
+    df = df.fillna(0)
+    # Recompute margin per-row from earnings/cost so it stays consistent with
+    # the aggregate weighted formula (avoids drift from stale stored premiums).
+    df['margin_pct'] = df.apply(
+        lambda r: (r['earnings_eur'] / r['purchase_price_euro'] * 100)
+                  if r['purchase_price_euro'] else 0,
+        axis=1,
+    )
+
+    total_revenue = float(df['sale_price_eur'].sum())
+    total_profit = float(df['earnings_eur'].sum())
+    units_sold = int(len(df))
+    total_cost = total_revenue - total_profit
+    avg_margin = (total_profit / total_cost * 100) if total_cost else 0.0
+
+    # Brand analysis
+    brand_stats = df.groupby('perfumer').agg(
+        revenue=('sale_price_eur', 'sum'),
+        profit=('earnings_eur', 'sum'),
+        units=('perfumer', 'count'),
+    ).reset_index()
+    brand_cost = brand_stats['revenue'] - brand_stats['profit']
+    brand_stats['avg_margin'] = (brand_stats['profit'] / brand_cost.where(brand_cost != 0) * 100).fillna(0)
+    if total_profit:
+        brand_stats['profit_share'] = (brand_stats['profit'] / total_profit * 100).round(1)
+    else:
+        brand_stats['profit_share'] = 0.0
+
+    top_by_profit = brand_stats.sort_values('profit', ascending=False).head(5)
+    recommended_brand = top_by_profit.iloc[0].to_dict()
+
+    # Fragrance breakdown for each of the top 5 perfumers, ranked by profit
+    fragrances_by_perfumer = {}
+    for perfumer_name in top_by_profit['perfumer']:
+        perf_df = df[df['perfumer'] == perfumer_name]
+        frag_stats = perf_df.groupby('fragrance').agg(
+            revenue=('sale_price_eur', 'sum'),
+            profit=('earnings_eur', 'sum'),
+            units=('fragrance', 'count'),
+        ).reset_index()
+        frag_cost = frag_stats['revenue'] - frag_stats['profit']
+        frag_stats['avg_margin'] = (
+            frag_stats['profit'] / frag_cost.where(frag_cost != 0) * 100
+        ).fillna(0)
+        frag_stats = frag_stats.sort_values('profit', ascending=False).head(10)
+        fragrances_by_perfumer[perfumer_name] = [
+            {
+                'fragrance': str(r['fragrance']),
+                'profit': float(r['profit']),
+                'units': int(r['units']),
+                'avg_margin': float(r['avg_margin']),
+            }
+            for _, r in frag_stats.iterrows()
+        ]
+
+    # Margin segmentation: <25%, 5%-wide bands from 25% to 150%, >150%
+    inner_edges = list(range(25, 155, 5))  # 25, 30, ..., 150
+    bins = [-1e9] + inner_edges + [1e9]
+    labels = (
+        ['<25%']
+        + [f'{inner_edges[i]}-{inner_edges[i+1]}%' for i in range(len(inner_edges) - 1)]
+        + ['>150%']
+    )
+    df['margin_segment'] = pd.cut(df['margin_pct'], bins=bins, labels=labels)
+
+    margin_stats = df.groupby('margin_segment', observed=False).agg(
+        units=('margin_segment', 'count'),
+        revenue=('sale_price_eur', 'sum'),
+        profit=('earnings_eur', 'sum'),
+    ).reset_index()
+    margin_stats['margin_segment'] = margin_stats['margin_segment'].astype(str)
+
+    optimal_idx = int(margin_stats['profit'].idxmax())
+    optimal_segment_name = margin_stats.loc[optimal_idx, 'margin_segment']
+    optimal_segment_profit = float(margin_stats.loc[optimal_idx, 'profit'])
+    optimal_segment_units = int(margin_stats.loc[optimal_idx, 'units'])
+
+    margin_records = [
+        {
+            'segment': r['margin_segment'],
+            'units': int(r['units']),
+            'revenue': float(r['revenue']),
+            'profit': float(r['profit']),
+        }
+        for _, r in margin_stats.iterrows()
+    ]
+
+    context = {
+        'available_years': available_years,
+        'selected_year': selected_year,
+        'no_data': False,
+        'total_revenue': total_revenue,
+        'total_profit': total_profit,
+        'avg_margin': avg_margin,
+        'units_sold': units_sold,
+        'top_by_profit': top_by_profit.to_dict('records'),
+        'fragrances_by_perfumer': fragrances_by_perfumer,
+        'recommended_brand': recommended_brand,
+        'margin_records': margin_records,
+        'optimal_segment': optimal_segment_name,
+        'optimal_segment_profit': optimal_segment_profit,
+        'optimal_segment_units': optimal_segment_units,
+        'chart_segments': margin_stats['margin_segment'].tolist(),
+        'chart_profits': [float(x) for x in margin_stats['profit']],
+    }
+    return render(request, 'sales_review.html', context)
 
 
 def inventory_list(request):

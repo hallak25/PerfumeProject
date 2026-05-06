@@ -17,6 +17,7 @@ urlpatterns = [
     path('fragrances/', views.get_fragrances, name='get_fragrances'),
     path('fragrances/add/', views.add_fragrance, name='add_fragrance'),
     path('financial_report/', views.all_time_financial_report, name='financial_report'),
+    path('sales_review/', views.sales_review, name='sales_review'),
     path('purchase_list/', views.purchase_list, name='purchase_list'),
     path('inventory_list/', views.inventory_list, name='inventory_list'),
     path('sell/<int:id>/', views.sell_perfume, name='sell_perfume'),
