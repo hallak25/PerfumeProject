@@ -32,7 +32,7 @@
             <a href="{% url 'index' %}" class="btn btn-light btn-sm position-absolute start-0 ms-4">
                 <i class="fas fa-home me-1"></i>Home
             </a>
-            <h4 class="fw-bold text-white mb-0"><i class="fas fa-chart-line me-2"></i>Financial Report</h4>
+            <h4 class="fw-bold text-white mb-0"><i class="fas fa-chart-line me-2"></i>Yearly Report</h4>
         </div>
     </div>
     <div class="container">
@@ -40,20 +40,14 @@
         <form method="get" class="row g-3 mb-4 align-items-end justify-content-center">
 
             <div class="col-auto">
-                <label for="start_date" class="form-label fw-bold">From:</label>
-                <input type="date" class="form-control" name="start_date"
-                       value="{{ start_date|default:'' }}" id="start_date">
-            </div>
-
-            <div class="col-auto">
-                <label for="end_date" class="form-label fw-bold">To:</label>
-                <input type="date" class="form-control" name="end_date"
-                       value="{{ end_date|default:'' }}" id="end_date">
-            </div>
-
-            <div class="col-auto">
-                <button type="submit" class="btn btn-primary">Filter Report</button>
-                <a href="." class="btn btn-secondary">Clear</a>
+                <label for="year" class="form-label fw-bold">Year:</label>
+                <select name="year" id="year" class="form-select" style="min-width:120px;"
+                        onchange="this.form.submit()">
+                    <option value="all" {% if selected_year == 'all' %}selected{% endif %}>All</option>
+                    {% for y in available_years %}
+                        <option value="{{ y }}" {% if selected_year|stringformat:"s" == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
         </form>

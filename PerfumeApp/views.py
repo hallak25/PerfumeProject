@@ -344,81 +344,51 @@ def PerfumeAppView(request):
 
 
 def all_time_financial_report(request):
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
+    selected_year = request.GET.get('year', 'all')
 
-    # 1. INITIAL QUERYSET AND DATE FILTERING
-    # This ensures only transactions within the exact date range are selected.
+    # Available years across purchase_date and sale_date
+    purchase_years = {d.year for d in PerfumeTransaction.objects.dates('purchase_date', 'year')}
+    sale_years = {d.year for d in PerfumeTransaction.objects.dates('sale_date', 'year')}
+    available_years = sorted(purchase_years | sale_years, reverse=True)
+
     queryset = PerfumeTransaction.objects.all()
+    if selected_year != 'all':
+        try:
+            year_int = int(selected_year)
+            queryset = queryset.filter(
+                Q(purchase_date__year=year_int) | Q(sale_date__year=year_int)
+            )
+        except ValueError:
+            selected_year = 'all'
 
-    if start_date and end_date:
-        # Transactions must have EITHER the purchase date OR the sale date
-        # strictly within the user-defined date range (YYYY-MM-DD).
-        combined_filter = (
-                Q(purchase_date__gte=start_date, purchase_date__lte=end_date) |
-                Q(sale_date__gte=start_date, sale_date__lte=end_date)
-        )
-        queryset = queryset.filter(combined_filter)
+    df_transactions = pd.DataFrame.from_records(list(queryset.values()))
 
-    elif start_date:
-        # Handle case where only start_date is provided
-        combined_filter = (
-                Q(purchase_date__gte=start_date) |
-                Q(sale_date__gte=start_date)
-        )
-        queryset = queryset.filter(combined_filter)
-
-    elif end_date:
-        # Handle case where only end_date is provided
-        combined_filter = (
-                Q(purchase_date__lte=end_date) |
-                Q(sale_date__lte=end_date)
-        )
-        queryset = queryset.filter(combined_filter)
-
-    # 2. CREATE DATAFRAME AND GENERATE MONTHLY REPORT
-
-    data = list(queryset.values())
-    df_transactions = pd.DataFrame.from_records(data)
+    base_context = {
+        'available_years': available_years,
+        'selected_year': selected_year,
+    }
 
     if df_transactions.empty:
-        context = {
+        return render(request, 'financial_report.html', {
+            **base_context,
             'columns': [],
             'data': [],
             'sums': {},
-            'start_date': start_date,
-            'end_date': end_date
-        }
-        return render(request, 'financial_report.html', context)
+        })
 
-    # df_report aggregates the filtered transactions and groups them by month.
     df_report = Transactions.all_time_report(df_transactions)
 
-    # 3. FINAL VISUAL FILTER (Ensures only relevant MONTH ROWS are shown)
-    # This prevents grouping anomalies (e.g., seeing all of December if the range ends Jan 1).
-    if start_date and end_date:
-        # Convert user's full dates to YYYY-MM strings for month-level row comparison.
-        start_month_str = datetime.strptime(start_date, '%Y-%m-%d').strftime('%Y-%m')
-        end_month_str = datetime.strptime(end_date, '%Y-%m-%d').strftime('%Y-%m')
+    if selected_year != 'all':
+        df_report = df_report[df_report['month'].astype(str).str.startswith(str(selected_year))]
 
-        # Filter rows where the 'month' column is within the calendar month range.
-        df_report = df_report[
-            (df_report['month'].astype(str) >= start_month_str) &
-            (df_report['month'].astype(str) <= end_month_str)
-            ]
-
-    # Handle case where the report is empty after final month filter
     if df_report.empty:
-        context = {
+        return render(request, 'financial_report.html', {
+            **base_context,
             'columns': df_report.columns.tolist(),
             'data': [],
             'sums': {},
-            'start_date': start_date,
-            'end_date': end_date
-        }
-        return render(request, 'financial_report.html', context)
+        })
 
-    # 4. RECALCULATE SUMS AND RENDER
     sums = {
         col: df_report[col].sum()
         for col in df_report.columns
@@ -430,15 +400,12 @@ def all_time_financial_report(request):
     if cost:
         sums['Premium %'] = int(round(total_earnings / cost * 100))
 
-    context = {
+    return render(request, 'financial_report.html', {
+        **base_context,
         'columns': df_report.columns.tolist(),
         'data': df_report.to_dict('records'),
         'sums': sums,
-        'start_date': start_date,
-        'end_date': end_date,
-    }
-
-    return render(request, 'financial_report.html', context)
+    })
 
 
 @staff_member_required

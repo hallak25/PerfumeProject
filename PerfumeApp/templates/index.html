@@ -43,21 +43,21 @@
         </div>
         <div class="col-md-4">
             <div class="card shadow-sm card-hover">
-                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Sales Review"
+                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Yearly Report"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title"><i class="fas fa-chart-pie me-2 text-primary"></i>Sales Review</h5>
-                    <a href="{% url 'sales_review' %}" class="btn btn-primary btn-sm mt-auto py-2">Analyze Sales</a>
+                    <h5 class="card-title"><i class="fas fa-chart-line me-2 text-primary"></i>Yearly Report</h5>
+                    <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm mt-auto py-2">Yearly</a>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
             <div class="card shadow-sm card-hover">
-                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="All Time Report"
+                <img src="{% static 'images/financial.jpg' %}" class="card-img-top" alt="Sales Review"
                      style="height:calc(50vh - 165px); object-fit:cover; object-position:top;">
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title"><i class="fas fa-chart-line me-2 text-primary"></i>Financial Report</h5>
-                    <a href="{% url 'financial_report' %}" class="btn btn-primary btn-sm mt-auto py-2">All Time</a>
+                    <h5 class="card-title"><i class="fas fa-chart-pie me-2 text-primary"></i>Sales Review</h5>
+                    <a href="{% url 'sales_review' %}" class="btn btn-primary btn-sm mt-auto py-2">Analyze Sales</a>
                 </div>
             </div>
         </div>
